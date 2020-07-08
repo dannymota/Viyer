@@ -97,4 +97,4 @@ Marketplace app to sell used/new items with AR functionality to increase selling
 ## Wireframes
 [Add picture of your hand sketched wireframes in this section]
 <img src="https://i.imgur.com/QuNJ57V.png" width=600>
-<img src="https://i.imgur.com/omcbGW3.png", width=600>
+<img src="https://i.imgur.com/omcbGW3.png" width=600>
