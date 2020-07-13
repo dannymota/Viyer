@@ -95,11 +95,14 @@ Marketplace app to sell used/new items with AR functionality to increase selling
    => Browse screen
 
 ## Wireframes
-*To be updated with final, complete, and sleek wireframes by 7/13/2020*
+*Initial wireframe*
 <img src="https://i.imgur.com/QuNJ57V.png" width=600>
+*Basic wireframe*
 <img src="https://i.imgur.com/omcbGW3.png" width=600>
+*Final wireframe*
+<img src="https://i.imgur.com/final.png" width=600>
 
-## Schema 
+## Schema
 ### Models
 #### Post
 
@@ -113,7 +116,7 @@ Marketplace app to sell used/new items with AR functionality to increase selling
    | price         | int      | product price by user |
    | createdAt     | DateTime | date when post is created (default field) |
    | updatedAt     | DateTime | date when post is last updated (default field) |
-   
+
 #### User
 
    | Property      | Type     | Description |
@@ -137,7 +140,7 @@ Marketplace app to sell used/new items with AR functionality to increase selling
    | objectId      | String   | unique id for the user post (default field) |
    | name          | String   | name of chatroom |
    | createdAt     | DateTime | date when post is created (default field) |
-   
+
 #### Message
 
    | Property      | Type     | Description |
@@ -190,7 +193,7 @@ Marketplace app to sell used/new items with AR functionality to increase selling
    - Login Screen
       - (Create/POST) Create a user
       - (Read/GET) Query user for authentication
-      
+
  #### [OPTIONAL:] Existing API Endpoints
  ##### No known API endpoints needed for app, will update if required. Below is a template that I will fill out.
 - Base URL - [http://www.facebook.com/api](http://www.facebook.com/api)
