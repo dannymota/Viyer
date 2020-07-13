@@ -95,11 +95,17 @@ Marketplace app to sell used/new items with AR functionality to increase selling
    => Browse screen
 
 ## Wireframes
-*Initial wireframe*
+
+**Initial wireframe**
+
 <img src="https://i.imgur.com/QuNJ57V.png" width=600>
-*Basic wireframe*
+
+**Basic wireframe**
+
 <img src="https://i.imgur.com/omcbGW3.png" width=600>
-*Final wireframe*
+
+**Final wireframe**
+
 <img src="final.png" width=600>
 
 ## Schema
