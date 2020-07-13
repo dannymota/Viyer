@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Viyer</string>
+    <string name="text_browse">Browse</string>
+    <string name="text_chat">Chat</string>
+    <string name="text_post">Post</string>
+    <string name="text_selling">Selling</string>
+    <string name="text_profile">Profile</string>
 </resources>
