@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
                     case R.id.action_post:
                         Log.d(TAG, "Clicked post");
                         break;
-                    case R.id.action_selling:
+                    case R.id.action_orders:
                         Log.d(TAG, "Clicked selling");
                         break;
                     case R.id.action_profile:
