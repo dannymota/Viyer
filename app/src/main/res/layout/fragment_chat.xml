@@ -12,7 +12,7 @@
         android:text="Chat" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvChats"
+        android:id="@+id/rvChatrooms"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
