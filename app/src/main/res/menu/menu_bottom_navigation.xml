@@ -22,7 +22,7 @@
     <item
         android:id="@+id/action_meetup"
         android:enabled="true"
-        android:icon="@drawable/ic_baseline_shopping_cart_24"
+        android:icon="@drawable/ic_baseline_emoji_people_24"
         android:title="@string/text_meetup"
         app:showAsAction="ifRoom" />
     <item
