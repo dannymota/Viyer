@@ -20,10 +20,10 @@
         android:title="@string/text_post"
         app:showAsAction="ifRoom" />
     <item
-        android:id="@+id/action_orders"
+        android:id="@+id/action_meetup"
         android:enabled="true"
         android:icon="@drawable/ic_baseline_shopping_cart_24"
-        android:title="@string/text_orders"
+        android:title="@string/text_meetup"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_profile"

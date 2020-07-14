@@ -3,6 +3,8 @@
     <string name="text_browse">Browse</string>
     <string name="text_chat">Chat</string>
     <string name="text_post">Post</string>
-    <string name="text_orders">Orders</string>
+    <string name="text_meetup">Meetup</string>
     <string name="text_profile">Profile</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

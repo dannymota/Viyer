@@ -6,12 +6,11 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
 
 import com.example.viyer.fragments.BrowseFragment;
 import com.example.viyer.fragments.ChatFragment;
-import com.example.viyer.fragments.OrderFragment;
+import com.example.viyer.fragments.MeetupFragment;
 import com.example.viyer.fragments.PostFragment;
 import com.example.viyer.fragments.ProfileFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -43,8 +42,8 @@ public class MainActivity extends AppCompatActivity {
                     case R.id.action_post:
                         fragment = new PostFragment();
                         break;
-                    case R.id.action_orders:
-                        fragment = new OrderFragment();
+                    case R.id.action_meetup:
+                        fragment = new MeetupFragment();
                         break;
                     case R.id.action_profile:
                     default:
