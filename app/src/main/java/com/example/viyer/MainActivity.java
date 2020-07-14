@@ -9,6 +9,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 
+import com.example.viyer.fragments.BrowseFragment;
+import com.example.viyer.fragments.ChatFragment;
+import com.example.viyer.fragments.OrderFragment;
+import com.example.viyer.fragments.PostFragment;
+import com.example.viyer.fragments.ProfileFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -30,23 +35,23 @@ public class MainActivity extends AppCompatActivity {
                 Fragment fragment;
                 switch (menuItem.getItemId()) {
                     case R.id.action_browse:
-                        Log.d(TAG, "Clicked browse");
+                        fragment = new BrowseFragment();
                         break;
                     case R.id.action_chat:
-                        Log.d(TAG, "Clicked chat");
+                        fragment = new ChatFragment();
                         break;
                     case R.id.action_post:
-                        Log.d(TAG, "Clicked post");
+                        fragment = new PostFragment();
                         break;
                     case R.id.action_orders:
-                        Log.d(TAG, "Clicked selling");
+                        fragment = new OrderFragment();
                         break;
                     case R.id.action_profile:
                     default:
-                        Log.d(TAG, "Clicked profile");
+                        fragment = new ProfileFragment();
                         break;
                 }
-                //fragmentManager.beginTransaction().replace(R.id.flContainer, fragment).commit();
+                fragmentManager.beginTransaction().replace(R.id.flContainer, fragment).commit();
                 return true;
             }
         });
