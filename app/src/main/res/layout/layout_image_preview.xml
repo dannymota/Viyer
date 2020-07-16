@@ -21,7 +21,7 @@
         android:layout_height="25dp"
         android:layout_gravity="end"
         android:background="@drawable/ic_baseline_cancel_24"
-        android:backgroundTint="#FF0000"
+        android:backgroundTint="#63ccff"
         android:scaleType="fitXY"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

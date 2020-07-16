@@ -36,9 +36,9 @@ public class BrowseFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-    private FirebaseUser user;
     private TextView tvEmail;
     private Button btnLogout;
+    private FirebaseUser user;
 
     public BrowseFragment() {
         // Required empty public constructor
@@ -69,6 +69,7 @@ public class BrowseFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
         user = FirebaseAuth.getInstance().getCurrentUser();
     }
 

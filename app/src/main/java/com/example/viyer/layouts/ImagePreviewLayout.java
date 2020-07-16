@@ -1,6 +1,7 @@
 package com.example.viyer.layouts;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -18,11 +19,11 @@ public class ImagePreviewLayout extends FrameLayout {
     private View mBtnClose;
     private TextView tvMainPhoto;
     private LayoutInflater inflater;
-    private String imgPhoto;
+    private Bitmap imgPhoto;
     private Boolean isMainPhoto;
     private Context mContext;
 
-    public ImagePreviewLayout(final Context context, String imgPhoto, Boolean isMainPhoto) {
+    public ImagePreviewLayout(final Context context, Bitmap imgPhoto, Boolean isMainPhoto) {
         super(context, null, 0);
         this.imgPhoto = imgPhoto;
         this.isMainPhoto = isMainPhoto;
@@ -47,9 +48,10 @@ public class ImagePreviewLayout extends FrameLayout {
         mImgPhoto = customView.findViewById(R.id.imgPhoto);
         mBtnClose = customView.findViewById(R.id.btnClose);
         tvMainPhoto = customView.findViewById(R.id.tvMainPhoto);
+        mImgPhoto.setImageBitmap(imgPhoto);
 
         tvMainPhoto.setVisibility(View.GONE);
-        Glide.with(context).load(imgPhoto).into(mImgPhoto);
+
         if (isMainPhoto) {
             tvMainPhoto.setVisibility(View.VISIBLE);
         }

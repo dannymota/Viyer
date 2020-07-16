@@ -14,6 +14,8 @@ import com.example.viyer.fragments.MeetupFragment;
 import com.example.viyer.fragments.PostFragment;
 import com.example.viyer.fragments.ProfileFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "MainActivity";
@@ -28,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
         bottomNavigationView = findViewById(R.id.bottomNavigation);
         fragmentManager = getSupportFragmentManager();
 
+        bottomNavigationView.getOrCreateBadge(R.id.action_chat).setNumber(26);
+
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
@@ -38,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case R.id.action_chat:
                         fragment = new ChatFragment();
+                        bottomNavigationView.getOrCreateBadge(R.id.action_chat).setVisible(false);
+                        bottomNavigationView.getOrCreateBadge(R.id.action_chat).clearNumber();
                         break;
                     case R.id.action_post:
                         fragment = new PostFragment();
