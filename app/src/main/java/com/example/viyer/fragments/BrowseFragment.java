@@ -1,14 +1,25 @@
 package com.example.viyer.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
 
+import com.example.viyer.LoginActivity;
+import com.example.viyer.MainActivity;
 import com.example.viyer.R;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+import org.w3c.dom.Text;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -25,6 +36,9 @@ public class BrowseFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    private FirebaseUser user;
+    private TextView tvEmail;
+    private Button btnLogout;
 
     public BrowseFragment() {
         // Required empty public constructor
@@ -55,6 +69,7 @@ public class BrowseFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+        user = FirebaseAuth.getInstance().getCurrentUser();
     }
 
     @Override
@@ -62,5 +77,28 @@ public class BrowseFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_browse, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        tvEmail = view.findViewById(R.id.tvEmail);
+        btnLogout = view.findViewById(R.id.btnLogout);
+
+        tvEmail.setText("Hi, " + user.getEmail());
+        btnLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FirebaseAuth.getInstance().signOut();
+                getLoginActivity();
+            }
+        });
+    }
+
+    private void getLoginActivity() {
+        Intent i = new Intent(getContext(), LoginActivity.class);
+        startActivity(i);
+        getActivity().onBackPressed();
     }
 }
