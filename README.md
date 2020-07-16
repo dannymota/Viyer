@@ -48,6 +48,10 @@ Marketplace app to sell used/new items with AR functionality to increase selling
 * Live chat
 * Material-UI Integration (for external library to add visual polish)
 
+**Optional Optional Nice-to-have Stories**
+
+* Model View Presenter architecture
+
 ### 2. Screen Archetypes
 
 * Login screen
