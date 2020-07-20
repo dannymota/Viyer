@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -73,6 +74,9 @@ public class PostFragment extends Fragment {
     private FirebaseUser user;
     private ProductsAdapter adapter;
     private List<Bitmap> photos;
+    private EditText etTitle;
+    private EditText etDesc;
+    private EditText etPrice;
 
     private String imageFilePath;
 
@@ -113,6 +117,9 @@ public class PostFragment extends Fragment {
         btnTake = view.findViewById(R.id.btnTake);
         btnPost = view.findViewById(R.id.btnPost);
         ivPreview = view.findViewById(R.id.ivPreview);
+        etTitle = view.findViewById(R.id.etTitle);
+        etDesc = view.findViewById(R.id.etDesc);
+        etPrice = view.findViewById(R.id.etPrice);
 
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
@@ -251,25 +258,46 @@ public class PostFragment extends Fragment {
                                 });
             }
 
-            Log.d("PostFragment", photoUrls.toString());
+            photos.clear();
+            adapter.notifyDataSetChanged();
+            filePaths.clear();
+            ivPreview.setImageResource(0);
+            etTitle.setText("");
+            etDesc.setText("");
+            etPrice.setText("");
         }
     }
 
     public void addImageToPost(String postUID, String photoUrl) {
-        LoginActivity.db().collection("posts").document(postUID).update("photoUrls", FieldValue.arrayUnion(photoUrl));
+        LoginActivity.db().collection("posts").document(postUID).update("photoUrls", FieldValue.arrayUnion(photoUrl))
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Image successfully written");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error writing image", e);
+                    }
+                });
     }
 
     public void addPostToCollection(String postID) {
         Map<String, Object> user = new HashMap<>();
         user.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
         user.put("photoUrls", new ArrayList<>());
+        user.put("title", etTitle.getText().toString());
+        user.put("description", etDesc.getText().toString());
+        user.put("price", etPrice.getText().toString());
 
         LoginActivity.db().collection("posts").document(postID)
                 .set(user)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "DocumentSnapshot successfully written!");
+                        Log.d(TAG, "DocumentSnapshot successfully written");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
