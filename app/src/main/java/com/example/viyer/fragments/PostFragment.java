@@ -41,6 +41,8 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static android.app.Activity.RESULT_OK;
@@ -63,7 +65,7 @@ public class PostFragment extends Fragment {
     private String mParam2;
 
     private LinearLayout llPreviews;
-    private Uri filePath;
+    private List<Uri> filePaths;
     private File photoFile;
     private String photoFileName = "photo.jpg";
     private final int PICK_IMAGE_REQUEST = 22;
@@ -126,8 +128,7 @@ public class PostFragment extends Fragment {
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
 
-//        llPreviews.addView(createImagePreview("https://img.letgo.com/images/20/4c/d1/1c/204cd11c9a415aab18af91a2103b3db8.jpg?impolicy=img_600", true));
-//        llPreviews.addView(createImagePreview("https://cdn.vox-cdn.com/thumbor/PiWoAygBS6lQXCasH8k4cxnjlFg=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19329297/DSCF4472.jpg", false));
+        filePaths = new ArrayList<>();
 
         ActionBar actionBar;
         actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
@@ -160,7 +161,6 @@ public class PostFragment extends Fragment {
     }
 
     private void selectImage() {
-        // Defining Implicit Intent to mobile gallery
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -193,7 +193,7 @@ public class PostFragment extends Fragment {
         File mediaStorageDir = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), TAG);
 
         // Create the storage directory if it does not exist
-        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()){
+        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             Log.d(TAG, "failed to create directory");
         }
 
@@ -204,27 +204,32 @@ public class PostFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Bitmap bitmap;
+        Boolean isMainPhoto;
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
             // Get the Uri of data
-            filePath = data.getData();
             try {
                 // Setting image on image view using Bitmap
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), filePath);
+                isMainPhoto = filePaths.size() == 0 ? true : false;
+                filePaths.add(data.getData());
+                bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), filePaths.get(filePaths.size() - 1));
                 ivPreview.setImageBitmap(bitmap);
-                llPreviews.addView(createImagePreview(bitmap, true));
+                llPreviews.addView(createImagePreview(bitmap, isMainPhoto));
             } catch (IOException e) {
                 // Log the exception
                 e.printStackTrace();
             }
         } else if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
-            Bitmap takenImage = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
-            ivPreview.setImageBitmap(takenImage);
-            llPreviews.addView(createImagePreview(takenImage, true));
+            isMainPhoto = filePaths.size() == 0 ? true : false;
+            filePaths.add(Uri.fromFile(photoFile));
+            bitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
+            ivPreview.setImageBitmap(bitmap);
+            llPreviews.addView(createImagePreview(bitmap, isMainPhoto));
         }
     }
 
     private void uploadImage() {
-        if (filePath != null) {
+        if (filePaths != null) {
             // Code for showing progressDialog while uploading
             final ProgressDialog progressDialog
                     = new ProgressDialog(getContext());
@@ -232,39 +237,43 @@ public class PostFragment extends Fragment {
             progressDialog.show();
 
             // Defining the child of storageReference
-            StorageReference ref = storageReference.child("posts/" + user.getUid() + "/" + UUID.randomUUID().toString());
+            StorageReference ref;
 
             // adding listeners on upload
             // or failure of image
-            ref.putFile(filePath)
-                    .addOnSuccessListener(
-                            new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                @Override
-                                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                    // Image uploaded successfully
-                                    // Dismiss dialog
-                                    progressDialog.dismiss();
-                                    Toast.makeText(getContext(),"Post sent", Toast.LENGTH_SHORT).show();
-                                }
-                            })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            // Error, Image not uploaded
-                            progressDialog.dismiss();
-                            Toast.makeText(getContext(),"Failed " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .addOnProgressListener(
-                            new OnProgressListener<UploadTask.TaskSnapshot>() {
-                                // Progress Listener for loading
-                                // percentage on the dialog box
-                                @Override
-                                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                                    double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
-                                    progressDialog.setMessage("Uploaded " + (int)progress + "%");
-                                }
-                            });
+
+            for (Uri uri : filePaths) {
+                ref = storageReference.child("posts/" + user.getUid() + "/" + UUID.randomUUID().toString());
+                ref.putFile(uri)
+                        .addOnSuccessListener(
+                                new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                        // Image uploaded successfully
+                                        // Dismiss dialog
+                                        progressDialog.dismiss();
+                                        Toast.makeText(getContext(),"Post sent", Toast.LENGTH_SHORT).show();
+                                    }
+                                })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                // Error, Image not uploaded
+                                progressDialog.dismiss();
+                                Toast.makeText(getContext(),"Failed " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .addOnProgressListener(
+                                new OnProgressListener<UploadTask.TaskSnapshot>() {
+                                    // Progress Listener for loading
+                                    // percentage on the dialog box
+                                    @Override
+                                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                                        double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+                                        progressDialog.setMessage("Uploaded " + (int)progress + "%");
+                                    }
+                                });
+            }
         }
     }
 }
