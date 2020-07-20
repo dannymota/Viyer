@@ -21,22 +21,9 @@
         android:layout_height="25dp"
         android:layout_gravity="end"
         android:background="@drawable/ic_baseline_cancel_24"
-        android:backgroundTint="#63ccff"
+        android:backgroundTint="#F44336"
         android:scaleType="fitXY"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/tvMainPhoto"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center"
-        android:background="#BF000000"
-        android:gravity="center"
-        android:text="Main photo"
-        android:textColor="#FFFFFF"
-        android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
