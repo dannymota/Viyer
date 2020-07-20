@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.viyer.R;
 import com.example.viyer.layouts.ImagePreviewView;
 
 import java.util.List;
@@ -38,16 +39,31 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
         return photoUrls.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private ImagePreviewView productView;
+        private View mBtnClose;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             productView = (ImagePreviewView) itemView;
+            mBtnClose = itemView.findViewById(R.id.btnClose);
+            itemView.setOnClickListener(this);
         }
 
         public void bind(Bitmap item) {
             productView.setImg(item);
+
+            mBtnClose.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // TODO: 7/20/20
+                }
+            });
+        }
+
+        @Override
+        public void onClick(View view) {
+
         }
     }
 }

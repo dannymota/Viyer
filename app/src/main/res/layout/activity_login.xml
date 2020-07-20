@@ -41,6 +41,7 @@
             app:layout_constraintBottom_toTopOf="@+id/btnSignup"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
+            android:inputType="textPassword"
             app:layout_constraintStart_toStartOf="parent"></EditText>
 
         <Button

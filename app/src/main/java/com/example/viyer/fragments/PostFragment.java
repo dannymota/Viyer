@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.viyer.LoginActivity;
 import com.example.viyer.R;
 import com.example.viyer.adapters.ProductsAdapter;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -64,7 +65,6 @@ public class PostFragment extends Fragment {
 
     private RecyclerView rvPreviews;
     private List<Uri> filePaths;
-    private Uri takePhoto;
     private final int PICK_IMAGE_REQUEST = 22;
     public final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 40;
     private Button btnSelect, btnTake, btnPost;
@@ -77,8 +77,6 @@ public class PostFragment extends Fragment {
     private EditText etTitle;
     private EditText etDesc;
     private EditText etPrice;
-
-    private String imageFilePath;
 
     public PostFragment() {}
 
@@ -255,16 +253,19 @@ public class PostFragment extends Fragment {
                                         double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
                                         progressDialog.setMessage("Uploaded " + (int)progress + "%");
                                     }
+                                }).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                                        photos.clear();
+                                        adapter.notifyDataSetChanged();
+                                        filePaths.clear();
+                                        ivPreview.setImageResource(R.drawable.ic_launcher_background);
+                                        etTitle.setText("");
+                                        etDesc.setText("");
+                                        etPrice.setText("");
+                                    }
                                 });
             }
-
-            photos.clear();
-            adapter.notifyDataSetChanged();
-            filePaths.clear();
-            ivPreview.setImageResource(0);
-            etTitle.setText("");
-            etDesc.setText("");
-            etPrice.setText("");
         }
     }
 
@@ -285,15 +286,15 @@ public class PostFragment extends Fragment {
     }
 
     public void addPostToCollection(String postID) {
-        Map<String, Object> user = new HashMap<>();
-        user.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-        user.put("photoUrls", new ArrayList<>());
-        user.put("title", etTitle.getText().toString());
-        user.put("description", etDesc.getText().toString());
-        user.put("price", etPrice.getText().toString());
+        Map<String, Object> post = new HashMap<>();
+        post.put("uid", user.getUid());
+        post.put("photoUrls", new ArrayList<>());
+        post.put("title", etTitle.getText().toString());
+        post.put("description", etDesc.getText().toString());
+        post.put("price", etPrice.getText().toString());
 
         LoginActivity.db().collection("posts").document(postID)
-                .set(user)
+                .set(post)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
