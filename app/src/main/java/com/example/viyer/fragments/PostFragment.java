@@ -160,9 +160,29 @@ public class PostFragment extends Fragment {
         btnPost.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                uploadImage();
+                if (filePaths.size() == 0) {
+                    Toast.makeText(getContext(),"Please upload at least one image", Toast.LENGTH_SHORT).show();
+                    return;
+                } else if (isEmpty(etTitle)) {
+                    etTitle.setError("Please set a title");
+                    return;
+                }
+                else if (isEmpty(etDesc)) {
+                    etDesc.setError("Please set a description");
+                    return;
+                }
+                else if (isEmpty(etPrice)) {
+                    etPrice.setError("Please set a price");
+                    return;
+                } else {
+                    uploadImage();
+                }
             }
         });
+    }
+
+    private boolean isEmpty(EditText etText) {
+        return etText.getText().toString().trim().length() == 0;
     }
 
     private void selectImage() {
