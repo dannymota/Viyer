@@ -225,7 +225,6 @@ public class PostFragment extends Fragment {
                                     @Override
                                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                         progressDialog.dismiss();
-                                        Toast.makeText(getContext(),"Post sent", Toast.LENGTH_SHORT).show();
 
                                         // TODO: 7/20/20 Add chain pattern to optimize callbacks
                                         Task<Uri> result = taskSnapshot.getMetadata().getReference().getDownloadUrl();
@@ -257,6 +256,7 @@ public class PostFragment extends Fragment {
                                 }).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
                                     @Override
                                     public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                                        Toast.makeText(getContext(),"Post sent", Toast.LENGTH_SHORT).show();
                                         photos.clear();
                                         adapter.notifyDataSetChanged();
                                         filePaths.clear();
