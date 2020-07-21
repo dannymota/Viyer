@@ -1,7 +1,7 @@
 package com.example.viyer.adapters;
 
 import android.graphics.Bitmap;
-import android.util.Log;
+import android.net.Uri;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -15,10 +15,12 @@ import java.util.List;
 
 public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHolder> {
 
-    List<Bitmap> photoUrls;
+    List<Bitmap> photos;
+    List<Uri> filePaths;
 
-    public ProductsAdapter(List<Bitmap> photoUrls) {
-        this.photoUrls = photoUrls;
+    public ProductsAdapter(List<Bitmap> photos, List<Uri> filePaths) {
+        this.photos = photos;
+        this.filePaths = filePaths;
     }
 
     @NonNull
@@ -30,13 +32,13 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Bitmap item = photoUrls.get(position);
+        Bitmap item = photos.get(position);
         holder.bind(item);
     }
 
     @Override
     public int getItemCount() {
-        return photoUrls.size();
+        return photos.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -50,13 +52,16 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
             itemView.setOnClickListener(this);
         }
 
-        public void bind(Bitmap item) {
+        public void bind(final Bitmap item) {
             productView.setImg(item);
 
             mBtnClose.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    // TODO: 7/20/20
+                    int position = getAdapterPosition();
+                    photos.remove(position);
+                    filePaths.remove(position);
+                    ProductsAdapter.this.notifyDataSetChanged();
                 }
             });
         }

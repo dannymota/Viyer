@@ -77,6 +77,7 @@ public class PostFragment extends Fragment {
     private EditText etTitle;
     private EditText etDesc;
     private EditText etPrice;
+    private View vSnackbar;
 
     public PostFragment() {}
 
@@ -118,6 +119,7 @@ public class PostFragment extends Fragment {
         etTitle = view.findViewById(R.id.etTitle);
         etDesc = view.findViewById(R.id.etDesc);
         etPrice = view.findViewById(R.id.etPrice);
+        vSnackbar = view.findViewById(R.id.vSnackbar);
 
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
@@ -125,7 +127,7 @@ public class PostFragment extends Fragment {
         filePaths = new ArrayList<>();
         photos = new ArrayList<>();
 
-        adapter = new ProductsAdapter(photos);
+        adapter = new ProductsAdapter(photos, filePaths);
 
         LinearLayoutManager horizontalLayoutManagaer = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         rvPreviews.setLayoutManager(horizontalLayoutManagaer);
@@ -186,7 +188,6 @@ public class PostFragment extends Fragment {
         Boolean isMainPhoto;
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
             try {
-                isMainPhoto = filePaths.size() == 0 ? true : false;
                 bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), data.getData());
                 filePaths.add(data.getData());
                 ivPreview.setImageBitmap(bitmap);
@@ -196,7 +197,6 @@ public class PostFragment extends Fragment {
                 e.printStackTrace();
             }
         } else if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK && data.getData() == null) {
-            isMainPhoto = filePaths.size() == 0 ? true : false;
             Bundle extras = data.getExtras();
             bitmap = (Bitmap) extras.get("data");
             filePaths.add(getImageUri(bitmap));
@@ -213,12 +213,12 @@ public class PostFragment extends Fragment {
 
             List<String> photoUrls = new ArrayList<>();
 
-            final String postID = UUID.randomUUID().toString().replaceAll("-", "");
+            final String postId = UUID.randomUUID().toString().replaceAll("-", "");
 
-            addPostToCollection(postID);
+            addPostToCollection(postId);
 
             for (Uri uri : filePaths) {
-                final StorageReference ref = storageReference.child("posts/" + postID + "/" + UUID.randomUUID().toString());
+                final StorageReference ref = storageReference.child("posts/" + postId + "/" + UUID.randomUUID().toString());
                 ref.putFile(uri)
                         .addOnSuccessListener(
                                 new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -227,11 +227,12 @@ public class PostFragment extends Fragment {
                                         progressDialog.dismiss();
                                         Toast.makeText(getContext(),"Post sent", Toast.LENGTH_SHORT).show();
 
+                                        // TODO: 7/20/20 Add chain pattern to optimize callbacks
                                         Task<Uri> result = taskSnapshot.getMetadata().getReference().getDownloadUrl();
                                         result.addOnSuccessListener(new OnSuccessListener<Uri>() {
                                             @Override
                                             public void onSuccess(Uri uri) {
-                                                addImageToPost(postID, uri.toString());
+                                                addImageToPost(postId, uri.toString());
                                             }
                                         });
                                     }
