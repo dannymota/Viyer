@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_browse"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_home_24"
+        android:title="@string/text_browse"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_chat"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_chat_bubble_24"
+        android:title="@string/text_chat"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_post"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_add_box_24"
+        android:title="@string/text_post"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_meetup"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_emoji_people_24"
+        android:title="@string/text_meetup"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_profile"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_person_24"
+        android:title="@string/text_profile"
+        app:showAsAction="ifRoom" />
+</menu>
