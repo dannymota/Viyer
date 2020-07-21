@@ -23,7 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.viyer.LoginActivity;
 import com.example.viyer.R;
-import com.example.viyer.adapters.ProductsAdapter;
+import com.example.viyer.adapters.PreviewsAdapter;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -72,7 +72,7 @@ public class PostFragment extends Fragment {
     private StorageReference storageReference;
     private ImageView ivPreview;
     private FirebaseUser user;
-    private ProductsAdapter adapter;
+    private PreviewsAdapter adapter;
     private List<Bitmap> photos;
     private EditText etTitle;
     private EditText etDesc;
@@ -127,7 +127,7 @@ public class PostFragment extends Fragment {
         filePaths = new ArrayList<>();
         photos = new ArrayList<>();
 
-        adapter = new ProductsAdapter(photos, filePaths);
+        adapter = new PreviewsAdapter(photos, filePaths);
 
         LinearLayoutManager horizontalLayoutManagaer = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         rvPreviews.setLayoutManager(horizontalLayoutManagaer);

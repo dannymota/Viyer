@@ -6,7 +6,10 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,12 +17,19 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.viyer.LoginActivity;
-import com.example.viyer.MainActivity;
 import com.example.viyer.R;
+import com.example.viyer.adapters.ProductsAdapter;
+import com.example.viyer.models.Product;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.QuerySnapshot;
 
-import org.w3c.dom.Text;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.example.viyer.MainActivity.TAG;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -39,6 +49,9 @@ public class BrowseFragment extends Fragment {
     private TextView tvEmail;
     private Button btnLogout;
     private FirebaseUser user;
+    private RecyclerView rvProducts;
+    private ProductsAdapter adapter;
+    private List<Product> products;
 
     public BrowseFragment() {
         // Required empty public constructor
@@ -86,6 +99,16 @@ public class BrowseFragment extends Fragment {
 
         tvEmail = view.findViewById(R.id.tvEmail);
         btnLogout = view.findViewById(R.id.btnLogout);
+        rvProducts = view.findViewById(R.id.rvProducts);
+        products = new ArrayList<Product>();
+
+        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getContext(), 3);
+        rvProducts.setLayoutManager(layoutManager);
+
+        adapter = new ProductsAdapter(getContext(), products);
+        rvProducts.setAdapter(adapter);
+
+        getProducts();
 
         tvEmail.setText("Hi, " + user.getEmail());
         btnLogout.setOnClickListener(new View.OnClickListener() {
@@ -101,5 +124,27 @@ public class BrowseFragment extends Fragment {
         Intent i = new Intent(getContext(), LoginActivity.class);
         startActivity(i);
         getActivity().onBackPressed();
+    }
+
+    private void getProducts() {
+        LoginActivity.db().collection("posts")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            List<Product> result = task.getResult().toObjects(Product.class);
+                            products.addAll(result);
+                            adapter.notifyDataSetChanged();
+//                            for (QueryDocumentSnapshot document : task.getResult()) {
+//                                Log.d(TAG, document.getId() + " => " + document.getData().get("photoUrls").toString());
+//                                photoUrls.add(document.getData().get("photoUrls").toString());
+//                                adapter.notifyItemInserted(photoUrls.size() - 1);
+//                            }
+                        } else {
+                            Log.d(TAG, "Error getting documents: ", task.getException());
+                        }
+                    }
+                });
     }
 }
