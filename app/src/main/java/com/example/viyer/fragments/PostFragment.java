@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,6 +18,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -37,8 +39,11 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +82,7 @@ public class PostFragment extends Fragment {
     private EditText etTitle;
     private EditText etDesc;
     private EditText etPrice;
+    private Uri photoUri;
     private View vSnackbar;
 
     public PostFragment() {}
@@ -140,7 +146,7 @@ public class PostFragment extends Fragment {
         btnTake.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                launchCamera();
+                dispatchTakePictureIntent();
             }
         });
 
@@ -174,6 +180,30 @@ public class PostFragment extends Fragment {
         }
     }
 
+    private void dispatchTakePictureIntent() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Ensure that there's a camera activity to handle the intent
+        if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+                return;
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(getContext(),
+                        "com.example.viyer.contentprovider",
+                        photoFile);
+                photoUri = photoURI;
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+            }
+        }
+    }
+
     public Uri getImageUri(Bitmap bitmap) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
@@ -181,27 +211,40 @@ public class PostFragment extends Fragment {
         return Uri.parse(path);
     }
 
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getActivity().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        String currentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
         Bitmap bitmap;
-        Boolean isMainPhoto;
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+        Uri uri;
+
+        if ((requestCode == PICK_IMAGE_REQUEST || requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) && resultCode == RESULT_OK && data != null) {
             try {
-                bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), data.getData());
-                filePaths.add(data.getData());
+                uri = data.getData() == null ? photoUri : data.getData();
+                bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), uri);
+                filePaths.add(uri);
                 ivPreview.setImageBitmap(bitmap);
                 photos.add(bitmap);
                 adapter.notifyItemInserted(photos.size() - 1);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } else if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK && data.getData() == null) {
-            Bundle extras = data.getExtras();
-            bitmap = (Bitmap) extras.get("data");
-            filePaths.add(getImageUri(bitmap));
-            photos.add(bitmap);
-            adapter.notifyItemInserted(photos.size() - 1);
         }
     }
 
