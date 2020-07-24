@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,17 +14,19 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.viyer.LoginActivity;
 import com.example.viyer.R;
-import com.example.viyer.adapters.ProductsAdapter;
+import com.example.viyer.adapters.PreviewsAdapter;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -37,8 +40,11 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,12 +78,13 @@ public class PostFragment extends Fragment {
     private StorageReference storageReference;
     private ImageView ivPreview;
     private FirebaseUser user;
-    private ProductsAdapter adapter;
+    private PreviewsAdapter adapter;
     private List<Bitmap> photos;
     private EditText etTitle;
     private EditText etDesc;
     private EditText etPrice;
-    private View vSnackbar;
+    private ScrollView scrollView;
+    private Uri photoUri;
 
     public PostFragment() {}
 
@@ -119,7 +126,6 @@ public class PostFragment extends Fragment {
         etTitle = view.findViewById(R.id.etTitle);
         etDesc = view.findViewById(R.id.etDesc);
         etPrice = view.findViewById(R.id.etPrice);
-        vSnackbar = view.findViewById(R.id.vSnackbar);
 
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
@@ -127,7 +133,7 @@ public class PostFragment extends Fragment {
         filePaths = new ArrayList<>();
         photos = new ArrayList<>();
 
-        adapter = new ProductsAdapter(photos, filePaths);
+        adapter = new PreviewsAdapter(photos, filePaths);
 
         LinearLayoutManager horizontalLayoutManagaer = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         rvPreviews.setLayoutManager(horizontalLayoutManagaer);
@@ -140,7 +146,7 @@ public class PostFragment extends Fragment {
         btnTake.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                launchCamera();
+                dispatchTakePictureIntent();
             }
         });
 
@@ -154,9 +160,34 @@ public class PostFragment extends Fragment {
         btnPost.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                uploadImage();
+                btnPost.setClickable(false);
+                if (filePaths.size() == 0) {
+                    Toast.makeText(getContext(),"Please upload at least one image", Toast.LENGTH_SHORT).show();
+                    return;
+                } else if (isEmpty(etTitle)) {
+                    etTitle.setError("Please set a title");
+                    etTitle.requestFocus();
+                    return;
+                }
+                else if (isEmpty(etDesc)) {
+                    etDesc.setError("Please set a description");
+                    etDesc.requestFocus();
+                    return;
+                }
+                else if (isEmpty(etPrice)) {
+                    etPrice.setError("Please set a price");
+                    etPrice.requestFocus();
+                    return;
+                } else {
+                    uploadImage();
+                }
+                btnPost.setClickable(true);
             }
         });
+    }
+
+    public static boolean isEmpty(EditText etText) {
+        return etText.getText().toString().trim().length() == 0;
     }
 
     private void selectImage() {
@@ -174,6 +205,30 @@ public class PostFragment extends Fragment {
         }
     }
 
+    private void dispatchTakePictureIntent() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Ensure that there's a camera activity to handle the intent
+        if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+                return;
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(getContext(),
+                        "com.example.viyer.contentprovider",
+                        photoFile);
+                photoUri = photoURI;
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+            }
+        }
+    }
+
     public Uri getImageUri(Bitmap bitmap) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
@@ -181,27 +236,40 @@ public class PostFragment extends Fragment {
         return Uri.parse(path);
     }
 
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getActivity().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        String currentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
         Bitmap bitmap;
-        Boolean isMainPhoto;
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+        Uri uri;
+
+        if ((requestCode == PICK_IMAGE_REQUEST || requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) && resultCode == RESULT_OK && data != null) {
             try {
-                bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), data.getData());
-                filePaths.add(data.getData());
+                uri = data.getData() == null ? photoUri : data.getData();
+                bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), uri);
+                filePaths.add(uri);
                 ivPreview.setImageBitmap(bitmap);
                 photos.add(bitmap);
                 adapter.notifyItemInserted(photos.size() - 1);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } else if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK && data.getData() == null) {
-            Bundle extras = data.getExtras();
-            bitmap = (Bitmap) extras.get("data");
-            filePaths.add(getImageUri(bitmap));
-            photos.add(bitmap);
-            adapter.notifyItemInserted(photos.size() - 1);
         }
     }
 
@@ -286,7 +354,7 @@ public class PostFragment extends Fragment {
                 });
     }
 
-    public void addPostToCollection(String postID) {
+    public void addPostToCollection(String postId) {
         Map<String, Object> post = new HashMap<>();
         post.put("uid", user.getUid());
         post.put("photoUrls", new ArrayList<>());
@@ -294,7 +362,7 @@ public class PostFragment extends Fragment {
         post.put("description", etDesc.getText().toString());
         post.put("price", etPrice.getText().toString());
 
-        LoginActivity.db().collection("posts").document(postID)
+        LoginActivity.db().collection("posts").document(postId)
                 .set(post)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
