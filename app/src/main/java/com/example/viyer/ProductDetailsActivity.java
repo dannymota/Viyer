@@ -90,6 +90,7 @@ public class ProductDetailsActivity extends AppCompatActivity {
         chat.put("uids", Arrays.asList(product.getUid(), user.getUid()));
         chat.put("updatedAt", new Timestamp(new Date()));
         chat.put("recentMessage", "");
+        chat.put("buyerUid", user.getUid());
 
         LoginActivity.db().collection("chats")
                 .add(chat)

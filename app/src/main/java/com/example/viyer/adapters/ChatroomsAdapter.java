@@ -2,6 +2,7 @@ package com.example.viyer.adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -64,20 +65,31 @@ public class ChatroomsAdapter extends RecyclerView.Adapter<ChatroomsAdapter.View
         private TextView tvName;
         private TextView tvMessage;
         private TextView tvUpdatedAt;
+        private TextView tvAgentType;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvName);
             tvMessage = itemView.findViewById(R.id.tvMessage);
             tvUpdatedAt = itemView.findViewById(R.id.tvUpdatedAt);
+            tvAgentType = itemView.findViewById(R.id.tvAgentType);
             itemView.setOnClickListener(this);
         }
 
         public void bind(Chatroom chatroom) {
             String uidOther = chatroom.getUids().get(0).equals(user.getUid()) ? chatroom.getUids().get(1) : user.getUid();
+            Boolean isBuyer = chatroom.getBuyerUid().equals(user.getUid()) ? true : false;
             tvName.setText(uidOther);
             tvMessage.setText(chatroom.getRecentMessage());
             tvUpdatedAt.setText(MainActivity.getRelativeTimeAgo(String.valueOf(chatroom.getUpdatedAt())));
+
+            if (isBuyer) {
+                tvAgentType.setText("Buying");
+                tvAgentType.setTextColor(Color.parseColor("#4CAF50"));
+            } else {
+                tvAgentType.setText("Selling");
+                tvAgentType.setTextColor(Color.parseColor("#F44336"));
+            }
         }
 
         @Override
