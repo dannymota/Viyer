@@ -6,8 +6,11 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.OrientationHelper;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,6 +27,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
@@ -46,12 +50,11 @@ public class BrowseFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-    private TextView tvEmail;
     private Button btnLogout;
-    private FirebaseUser user;
     private RecyclerView rvProducts;
     private ProductsAdapter adapter;
     private List<Product> products;
+    private FirebaseUser user;
 
     public BrowseFragment() {
         // Required empty public constructor
@@ -82,7 +85,6 @@ public class BrowseFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
-
         user = FirebaseAuth.getInstance().getCurrentUser();
     }
 
@@ -97,20 +99,18 @@ public class BrowseFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        tvEmail = view.findViewById(R.id.tvEmail);
         btnLogout = view.findViewById(R.id.btnLogout);
         rvProducts = view.findViewById(R.id.rvProducts);
-        products = new ArrayList<Product>();
-
-        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getContext(), 3);
-        rvProducts.setLayoutManager(layoutManager);
-
+        products = new ArrayList<>();
         adapter = new ProductsAdapter(getContext(), products);
         rvProducts.setAdapter(adapter);
 
-        getProducts();
+        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
+        layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
 
-        tvEmail.setText("Hi, " + user.getEmail());
+        rvProducts.setLayoutManager(layoutManager);
+        rvProducts.setItemAnimator(new DefaultItemAnimator());
+
         btnLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -118,6 +118,8 @@ public class BrowseFragment extends Fragment {
                 getLoginActivity();
             }
         });
+
+        getProducts();
     }
 
     private void getLoginActivity() {
@@ -136,11 +138,6 @@ public class BrowseFragment extends Fragment {
                             List<Product> result = task.getResult().toObjects(Product.class);
                             products.addAll(result);
                             adapter.notifyDataSetChanged();
-//                            for (QueryDocumentSnapshot document : task.getResult()) {
-//                                Log.d(TAG, document.getId() + " => " + document.getData().get("photoUrls").toString());
-//                                photoUrls.add(document.getData().get("photoUrls").toString());
-//                                adapter.notifyItemInserted(photoUrls.size() - 1);
-//                            }
                         } else {
                             Log.d(TAG, "Error getting documents: ", task.getException());
                         }

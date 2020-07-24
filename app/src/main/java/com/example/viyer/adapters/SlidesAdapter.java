@@ -44,7 +44,7 @@ public class SlidesAdapter extends PagerAdapter {
     public Object instantiateItem(@NonNull ViewGroup container, int position) {
 
         layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View view = layoutInflater.inflate(R.layout.item_product, container, false);
+        View view = layoutInflater.inflate(R.layout.item_slide_product, container, false);
         ivProduct = (ImageView) view.findViewById(R.id.ivProduct);
 
         Glide.with(context).load(photoUrls.get(position)).into(ivProduct);

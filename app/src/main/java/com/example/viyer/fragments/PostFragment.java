@@ -165,14 +165,17 @@ public class PostFragment extends Fragment {
                     return;
                 } else if (isEmpty(etTitle)) {
                     etTitle.setError("Please set a title");
+                    etTitle.requestFocus();
                     return;
                 }
                 else if (isEmpty(etDesc)) {
                     etDesc.setError("Please set a description");
+                    etDesc.requestFocus();
                     return;
                 }
                 else if (isEmpty(etPrice)) {
                     etPrice.setError("Please set a price");
+                    etPrice.requestFocus();
                     return;
                 } else {
                     uploadImage();
@@ -181,7 +184,7 @@ public class PostFragment extends Fragment {
         });
     }
 
-    private boolean isEmpty(EditText etText) {
+    public static boolean isEmpty(EditText etText) {
         return etText.getText().toString().trim().length() == 0;
     }
 
@@ -349,7 +352,7 @@ public class PostFragment extends Fragment {
                 });
     }
 
-    public void addPostToCollection(String postID) {
+    public void addPostToCollection(String postId) {
         Map<String, Object> post = new HashMap<>();
         post.put("uid", user.getUid());
         post.put("photoUrls", new ArrayList<>());
@@ -357,7 +360,7 @@ public class PostFragment extends Fragment {
         post.put("description", etDesc.getText().toString());
         post.put("price", etPrice.getText().toString());
 
-        LoginActivity.db().collection("posts").document(postID)
+        LoginActivity.db().collection("posts").document(postId)
                 .set(post)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
