@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.viyer.LoginActivity;
@@ -24,14 +25,20 @@ import com.example.viyer.R;
 import com.example.viyer.adapters.ProductsAdapter;
 import com.example.viyer.models.Product;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.example.viyer.MainActivity.TAG;
 
@@ -55,6 +62,10 @@ public class BrowseFragment extends Fragment {
     private ProductsAdapter adapter;
     private List<Product> products;
     private FirebaseUser user;
+    private TextView tvNoMessage;
+    private ImageView ivDog;
+    private TextView tvSort;
+    private TextView tvDetail;
 
     public BrowseFragment() {
         // Required empty public constructor
@@ -101,6 +112,10 @@ public class BrowseFragment extends Fragment {
 
         btnLogout = view.findViewById(R.id.btnLogout);
         rvProducts = view.findViewById(R.id.rvProducts);
+        tvNoMessage = view.findViewById(R.id.tvNoMessage);
+        tvSort = view.findViewById(R.id.tvSort);
+        tvDetail = view.findViewById(R.id.tvDetail);
+        ivDog = view.findViewById(R.id.ivDog);
         products = new ArrayList<>();
         adapter = new ProductsAdapter(getContext(), products);
         rvProducts.setAdapter(adapter);
@@ -130,14 +145,29 @@ public class BrowseFragment extends Fragment {
 
     private void getProducts() {
         LoginActivity.db().collection("posts")
+                .limit(200)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
+
                         if (task.isSuccessful()) {
                             List<Product> result = task.getResult().toObjects(Product.class);
+                            result.removeIf(p -> p.getUid().equals(user.getUid()));
+
+                            if (result.isEmpty()) {
+                                tvNoMessage.setVisibility(View.VISIBLE);
+                                ivDog.setVisibility(View.VISIBLE);
+                            } else {
+                                tvNoMessage.setVisibility(View.INVISIBLE);
+                                ivDog.setVisibility(View.INVISIBLE);
+                                tvDetail.setVisibility(View.VISIBLE);
+                                tvSort.setVisibility(View.VISIBLE);
+                            }
+
                             products.addAll(result);
                             adapter.notifyDataSetChanged();
+                            Log.d(TAG, "Size: " + products.size());
                         } else {
                             Log.d(TAG, "Error getting documents: ", task.getException());
                         }

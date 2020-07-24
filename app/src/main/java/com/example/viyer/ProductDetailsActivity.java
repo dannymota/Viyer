@@ -17,6 +17,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -27,6 +28,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 import org.parceler.Parcels;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -86,6 +88,8 @@ public class ProductDetailsActivity extends AppCompatActivity {
         Map<String, Object> chat = new HashMap<>();
         chat.put("productId", product.getDocumentId());
         chat.put("uids", Arrays.asList(product.getUid(), user.getUid()));
+        chat.put("updatedAt", new Timestamp(new Date()));
+        chat.put("recentMessage", "");
 
         LoginActivity.db().collection("chats")
                 .add(chat)
@@ -113,18 +117,15 @@ public class ProductDetailsActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
-
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 getChatActivity(document.getId());
                                 Log.d(TAG, "Found chat with documentId: " + document.getId());
                                 break;
                             }
-
                             if (task.getResult().getDocuments().size() == 0) {
                                 Log.d(TAG, "Could not find productId: " + product.getDocumentId() + "with user:" + user.getUid());
                                 createChat();
                             }
-
                         } else {
                             Log.d(TAG, "Error getting documents: ", task.getException());
                         }

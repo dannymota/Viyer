@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -82,8 +83,8 @@ public class PostFragment extends Fragment {
     private EditText etTitle;
     private EditText etDesc;
     private EditText etPrice;
+    private ScrollView scrollView;
     private Uri photoUri;
-    private View vSnackbar;
 
     public PostFragment() {}
 
@@ -125,7 +126,6 @@ public class PostFragment extends Fragment {
         etTitle = view.findViewById(R.id.etTitle);
         etDesc = view.findViewById(R.id.etDesc);
         etPrice = view.findViewById(R.id.etPrice);
-        vSnackbar = view.findViewById(R.id.vSnackbar);
 
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
@@ -160,6 +160,7 @@ public class PostFragment extends Fragment {
         btnPost.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                btnPost.setClickable(false);
                 if (filePaths.size() == 0) {
                     Toast.makeText(getContext(),"Please upload at least one image", Toast.LENGTH_SHORT).show();
                     return;
@@ -180,6 +181,7 @@ public class PostFragment extends Fragment {
                 } else {
                     uploadImage();
                 }
+                btnPost.setClickable(true);
             }
         });
     }

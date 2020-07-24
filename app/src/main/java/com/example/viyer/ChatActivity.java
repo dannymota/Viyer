@@ -101,7 +101,7 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
-    private void sendMessage(String message, String chatId) {
+    private void sendMessage(final String message, final String chatId) {
         Map<String, Object> data = new HashMap<>();
         data.put("content", message);
         data.put("createdAt", new Timestamp(new Date()));
@@ -115,6 +115,8 @@ public class ChatActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
                         Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
+                        updateRecentChatTime(chatId);
+                        updateRecentChatMessage(message, chatId);
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -125,11 +127,47 @@ public class ChatActivity extends AppCompatActivity {
                 });
     }
 
+    private void updateRecentChatTime(String chatId) {
+        LoginActivity.db().collection("chats")
+                .document(chatId)
+                .update("updatedAt", new Timestamp(new Date()))
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.d(TAG, "DocumentSnapshot successfully updated!");
+                        }
+                    })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error updating document", e);
+                    }
+                });
+    }
+
+    private void updateRecentChatMessage(String message, String chatId) {
+        LoginActivity.db().collection("chats")
+                .document(chatId)
+                .update("recentMessage", message)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "DocumentSnapshot successfully updated!");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error updating document", e);
+                    }
+                });
+    }
+
     public void getMessages(String chatId) {
         LoginActivity.db().collection("chats")
                 .document(chatId)
                 .collection("messages")
-                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .orderBy("createdAt", Query.Direction.ASCENDING)
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
                     public void onEvent(@Nullable QuerySnapshot snapshots,
@@ -143,13 +181,12 @@ public class ChatActivity extends AppCompatActivity {
                             switch (dc.getType()) {
                                 case ADDED:
                                     Message result = dc.getDocument().toObject(Message.class);
-                                    messages.add(result);
+                                    messages.add(0, result);
                                     rvMessages.smoothScrollToPosition(0);
-                                    adapter.notifyItemInserted(messages.size() - 1);
+                                    adapter.notifyItemInserted(0);
                                     break;
                                 case MODIFIED:
                                     Log.d(TAG, "Modified city: " + dc.getDocument().getData());
-                                    adapter.notifyDataSetChanged();
                                     break;
                                 case REMOVED:
                                     Log.d(TAG, "Removed city: " + dc.getDocument().getData());
