@@ -1,10 +1,13 @@
 package com.example.viyer;
 
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -19,9 +22,11 @@ import com.example.viyer.adapters.ChatsAdapter;
 import com.example.viyer.fragments.BrowseFragment;
 import com.example.viyer.fragments.PostFragment;
 import com.example.viyer.models.Message;
+import com.example.viyer.models.Offer;
 import com.example.viyer.models.Product;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -29,6 +34,7 @@ import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -51,12 +57,14 @@ public class ChatActivity extends AppCompatActivity {
     private Button btnSend;
     private EditText etMessage;
     private String chatId;
+    private String buyerUid;
     private LinearLayoutManager linearLayoutManager;
     private Bundle bundle;
     private Product product;
     private TextView tvProductTitle;
     private TextView tvSellerUid;
     private ImageView ivProduct;
+    private ImageButton btnSuggest;
 
 
     @Override
@@ -69,6 +77,7 @@ public class ChatActivity extends AppCompatActivity {
         tvProductTitle = findViewById(R.id.tvProductTitle);
         tvSellerUid = findViewById(R.id.tvSellerUid);
         ivProduct = findViewById(R.id.ivProduct);
+        btnSuggest = findViewById(R.id.btnSuggest);
 
         user = FirebaseAuth.getInstance().getCurrentUser();
 
@@ -82,6 +91,7 @@ public class ChatActivity extends AppCompatActivity {
 
         bundle = getIntent().getExtras();
         chatId = bundle.getString("chatId");
+        buyerUid = bundle.getString("buyerUid");
         product = (Product) Parcels.unwrap(getIntent().getParcelableExtra(Product.class.getSimpleName()));
 
         tvProductTitle.setText(product.getTitle());
@@ -89,6 +99,16 @@ public class ChatActivity extends AppCompatActivity {
         Glide.with(this).load(product.getPhotoUrls().get(0)).into(ivProduct);
 
         getMessages(chatId);
+        getOffers();
+
+        btnSuggest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(ChatActivity.this, SuggestLocationActivity.class);
+                intent.putExtra(Product.class.getSimpleName(), Parcels.wrap(product));
+                startActivity(intent);
+            }
+        });
 
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -196,5 +216,87 @@ public class ChatActivity extends AppCompatActivity {
 
                     }
                 });
+    }
+
+    public void getOffers() {
+        LoginActivity.db().collection("offers")
+                .whereEqualTo("productId", product.getDocumentId())
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(@Nullable QuerySnapshot snapshots,
+                                        @Nullable FirebaseFirestoreException e) {
+                        if (e != null) {
+                            Log.w(TAG, "listen:error", e);
+                            return;
+                        }
+
+                        for (DocumentChange dc : snapshots.getDocumentChanges()) {
+                            switch (dc.getType()) {
+                                case ADDED:
+                                case MODIFIED:
+                                    Offer added = dc.getDocument().toObject(Offer.class);
+                                    if (!added.getBuyerUid().equals(user.getUid())
+                                            && added.getLocation() != null
+                                            && added.getBuyerUid().equals(buyerUid)
+                                            && !product.getLocked() && !added.isResponse()) {
+                                        showOffer(added);
+                                    }  else if (added.getBuyerUid().equals(user.getUid()) && added.isResponse() && !added.isStatus()) {
+                                        offerUpdate("rejected");
+                                    } else if (added.getBuyerUid().equals(user.getUid()) && added.isResponse() && added.isStatus()) {
+                                        offerUpdate("accepted");
+                                    }
+                                    break;
+                                case REMOVED:
+                                    Log.d(TAG, "Removed offer: " + dc.getDocument().getData());
+                                    break;
+                            }
+                        }
+
+                    }
+                });
+    }
+
+    private void showOffer(Offer offer) {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
+        builder.setTitle("Offer Received")
+                .setMessage("Congratulations, you have an offer for " + product.getTitle()
+                        + ". " + buyerUid + " is willing to pay "
+                        + offer.getOffer() + " and meetup at " + offer.getLocation() + ". Do you accept?");
+        builder.setPositiveButton("Accept", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                updateOffer("offers", offer.getDocumentId(), "status", true);
+                updateOffer("offers", offer.getDocumentId(), "response", true);
+                updateOffer("posts", product.getDocumentId(), "locked", true);
+            }
+        });
+        builder.setNegativeButton("Reject", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                updateOffer("offers", offer.getDocumentId(), "response", true);
+            }
+        });
+        builder.show();
+    }
+
+    private void offerUpdate(String status) {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
+        builder.setTitle("Offer Accepted")
+                .setMessage("The seller has " + status + " your offer.");
+        builder.show();
+    }
+
+    private void updateOffer(String collection, String documentId, String field, boolean status) {
+        LoginActivity.db().collection(collection).document(documentId).update(field, status).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Log.d(TAG, "DocumentSnapshot successfully updated!");
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d(TAG, "DocumentSnapshot failed!");
+            }
+        });
     }
 }

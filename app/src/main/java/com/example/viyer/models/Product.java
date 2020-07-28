@@ -11,8 +11,18 @@ import java.util.List;
 public class Product {
     private String title;
     private String description;
-    private String price;
+    private int price;
     private String uid;
+    private Boolean locked;
+    private List<String> likes;
+
+    public List<String> getLikes() {
+        return likes;
+    }
+
+    public Boolean getLocked() {
+        return locked;
+    }
 
     public String getUid() {
         return uid;
@@ -38,7 +48,7 @@ public class Product {
         return description;
     }
 
-    public String getPrice() {
+    public int getPrice() {
         return price;
     }
 

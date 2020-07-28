@@ -44,6 +44,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -360,7 +361,9 @@ public class PostFragment extends Fragment {
         post.put("photoUrls", new ArrayList<>());
         post.put("title", etTitle.getText().toString());
         post.put("description", etDesc.getText().toString());
-        post.put("price", etPrice.getText().toString());
+        post.put("price", Integer.parseInt(etPrice.getText().toString()));
+        post.put("locked", false);
+        post.put("likes", Arrays.asList());
 
         LoginActivity.db().collection("posts").document(postId)
                 .set(post)

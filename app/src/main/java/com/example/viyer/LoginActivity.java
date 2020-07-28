@@ -15,6 +15,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -26,9 +27,9 @@ public class LoginActivity extends AppCompatActivity {
     public static final String TAG = "LoginActivity";
     private Button btnLogin;
     private Button btnSignup;
-    private TextView etEmail;
-    private TextView etPassword;
-    private FirebaseAuth mAuth;
+    private TextInputLayout etEmail;
+    private TextInputLayout etPassword;
+    public FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,22 +42,22 @@ public class LoginActivity extends AppCompatActivity {
             getMainActivity();
         }
 
-        btnLogin = findViewById(R.id.btnLogin);
-        btnSignup = findViewById(R.id.btnSignup);
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
+        btnLogin = findViewById(R.id.btnLogin);
+        btnSignup = findViewById(R.id.btnSignUp);
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                signInUser(etEmail.getText().toString(), etPassword.getText().toString());
+                signInUser(etEmail.getEditText().getText().toString().trim(), etPassword.getEditText().getText().toString().trim());
             }
         });
 
         btnSignup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                signUpUser(etEmail.getText().toString(), etPassword.getText().toString());
+                getSignUpActivity();
             }
         });
     }
@@ -67,64 +68,32 @@ public class LoginActivity extends AppCompatActivity {
         finish();
     }
 
-    private void signUpUser(String email, String password) {
-        mAuth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                @Override
-                public void onComplete(@NonNull Task<AuthResult> task) {
-                    if (task.isSuccessful()) {
-                        Log.d(TAG, "createUserWithEmail:success");
-                        addUserToCollection(FirebaseAuth.getInstance().getCurrentUser().getUid());
-                        getMainActivity();
-                    } else {
-                        Log.w(TAG, "createUserWithEmail:failure", task.getException());
-                        Toast.makeText(LoginActivity.this, "Authentication failed.",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
+    private void getSignUpActivity() {
+        Intent i = new Intent(this, SignUpActivity.class);
+        startActivity(i);
     }
 
     public static FirebaseFirestore db() {
         return FirebaseFirestore.getInstance();
     };
 
-    public void addUserToCollection(String uid) {
-        Map<String, Object> user = new HashMap<>();
-        user.put("city", "Los Angeles");
-        user.put("state", "CA");
-        user.put("country", "USA");
-
-        db().collection("users").document(uid)
-            .set(user)
-            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                @Override
-                public void onSuccess(Void aVoid) {
-                    Log.d(TAG, "DocumentSnapshot successfully written!");
-                }
-            })
-            .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Log.w(TAG, "Error writing document", e);
-                }
-            });
+    public static FirebaseAuth mAuth() {
+        return FirebaseAuth.getInstance();
     }
 
     private void signInUser(String email, String password) {
         mAuth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                @Override
-                public void onComplete(@NonNull Task<AuthResult> task) {
-                    if (task.isSuccessful()) {
-                        Log.d(TAG, "signInWithEmail:success");
-                        getMainActivity();
-                    } else {
-                        Log.w(TAG, "signInWithEmail:failure", task.getException());
-                        Toast.makeText(LoginActivity.this, "Authentication failed.",
-                                Toast.LENGTH_SHORT).show();
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "signInWithEmail:success");
+                            getMainActivity();
+                        } else {
+                            Log.w(TAG, "signInWithEmail:failure", task.getException());
+                            Toast.makeText(LoginActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
+                        }
                     }
-                }
-            });
+                });
     }
 }

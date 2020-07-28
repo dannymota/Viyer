@@ -1,5 +1,6 @@
 package com.example.viyer.fragments;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -19,6 +20,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.viyer.LoginActivity;
 import com.example.viyer.R;
@@ -28,6 +30,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.Query;
@@ -116,6 +119,7 @@ public class BrowseFragment extends Fragment {
         tvSort = view.findViewById(R.id.tvSort);
         tvDetail = view.findViewById(R.id.tvDetail);
         ivDog = view.findViewById(R.id.ivDog);
+
         products = new ArrayList<>();
         adapter = new ProductsAdapter(getContext(), products);
         rvProducts.setAdapter(adapter);
@@ -135,6 +139,13 @@ public class BrowseFragment extends Fragment {
         });
 
         getProducts();
+
+        tvSort.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                changeSorting();
+            }
+        });
     }
 
     private void getLoginActivity() {
@@ -167,11 +178,42 @@ public class BrowseFragment extends Fragment {
 
                             products.addAll(result);
                             adapter.notifyDataSetChanged();
-                            Log.d(TAG, "Size: " + products.size());
                         } else {
                             Log.d(TAG, "Error getting documents: ", task.getException());
                         }
                     }
                 });
+    }
+
+    private void changeSorting() {
+        final CharSequence[] MAP_TYPE_ITEMS =
+                {"Road", "Satellite", "Hybrid"};
+        int checkItem = 0;
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(getContext());
+        builder.setTitle("Sort by");
+        builder.setSingleChoiceItems(
+                MAP_TYPE_ITEMS,
+                checkItem,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        switch (item) {
+                            case 0:
+                                Toast.makeText(getContext(), "Item 0 clicked ", Toast.LENGTH_SHORT).show();
+                                break;
+                            case 1:
+                                Toast.makeText(getContext(), "Item 1 clicked ", Toast.LENGTH_SHORT).show();
+                                break;
+                            case 2:
+                                Toast.makeText(getContext(), "Item 2 clicked ", Toast.LENGTH_SHORT).show();
+                                break;
+                        }
+                        if (adapter.getItemViewType(item) == 0) {
+                            dialog.dismiss();
+                        }
+                    }
+                }
+        );
+        builder.show();
     }
 }

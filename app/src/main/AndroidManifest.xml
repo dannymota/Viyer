@@ -11,6 +11,20 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="18" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <permission
+        android:name="com.example.viyer.permission.MAPS_RECEIVE"
+        android:protectionLevel="normal" />
+
+    <uses-permission android:name="com.example.viyer.permission.MAPS_RECEIVE" />
+
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -19,7 +33,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ProductDetailsActivity"></activity>
+        <activity android:name=".SignUpActivity"></activity>
+        <activity android:name=".SuggestLocationActivity" />
+        <activity android:name=".ProductDetailsActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -40,6 +56,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainActivity" />
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyAOJDiBTvLbWl4kX80Dzs-eRE3YcFVlXlw" />
     </application>
 
 </manifest>

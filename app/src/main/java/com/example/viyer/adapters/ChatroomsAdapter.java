@@ -69,10 +69,10 @@ public class ChatroomsAdapter extends RecyclerView.Adapter<ChatroomsAdapter.View
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvName = itemView.findViewById(R.id.tvName);
+            tvName = itemView.findViewById(R.id.tvFullName);
             tvMessage = itemView.findViewById(R.id.tvMessage);
             tvUpdatedAt = itemView.findViewById(R.id.tvUpdatedAt);
-            tvAgentType = itemView.findViewById(R.id.tvAgentType);
+            tvAgentType = itemView.findViewById(R.id.tvLocation);
             itemView.setOnClickListener(this);
         }
 
@@ -112,6 +112,7 @@ public class ChatroomsAdapter extends RecyclerView.Adapter<ChatroomsAdapter.View
                             product = document.toObject(Product.class);
                             Intent intent = new Intent(context, ChatActivity.class);
                             intent.putExtra("chatId", chatroom.getDocumentId());
+                            intent.putExtra("buyerUid", chatroom.getBuyerUid());
                             intent.putExtra(Product.class.getSimpleName(), Parcels.wrap(product));
                             context.startActivity(intent);
                         } else {
