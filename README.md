@@ -42,7 +42,7 @@ Marketplace app to sell used/new items with AR functionality to increase selling
 **Optional Nice-to-have Stories**
 
 * Instant identity verification given a user photo and government issued ID
-* AR Object Scanning
+* AR Object Displaying
 * Paid front page ads
 * Phone number login
 * Live chat
