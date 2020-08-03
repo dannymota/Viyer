@@ -2,7 +2,6 @@ package com.example.viyer.models;
 
 import com.google.firebase.firestore.DocumentId;
 
-import org.json.JSONArray;
 import org.parceler.Parcel;
 
 import java.util.List;
@@ -15,6 +14,16 @@ public class Product {
     private String uid;
     private Boolean locked;
     private List<String> likes;
+//    private UnifiedNativeAd ads;
+    private int type;
+
+//    public UnifiedNativeAd getAds() {
+//        return ads;
+//    }
+
+    public int getType() {
+        return type;
+    }
 
     public List<String> getLikes() {
         return likes;

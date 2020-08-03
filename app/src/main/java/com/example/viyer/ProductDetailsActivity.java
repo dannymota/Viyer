@@ -3,8 +3,10 @@ package com.example.viyer;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -12,6 +14,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -19,6 +22,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager;
 
 import com.example.viyer.adapters.SlidesAdapter;
+import com.example.viyer.helpers.CameraPermissionHelper;
 import com.example.viyer.models.Chatroom;
 import com.example.viyer.models.Product;
 import com.example.viyer.models.User;
@@ -26,6 +30,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.ar.core.ArCoreApk;
+import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -57,7 +63,9 @@ public class ProductDetailsActivity extends AppCompatActivity {
     private SlidesAdapter adapter;
     private FirebaseUser firebaseUser;
     private ImageView ivLiked;
+    private ImageView ivAR;
     private Boolean liked;
+    private boolean mUserRequestedInstall = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,9 +73,7 @@ public class ProductDetailsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_product_details);
 
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        Log.d("Main", firebaseUser.getUid());
         product = (Product) Parcels.unwrap(getIntent().getParcelableExtra(Product.class.getSimpleName()));
-        getUpdatedLike();
 
         tvTitle = findViewById(R.id.tvTitle);
         tvLocation = findViewById(R.id.tvLocation);
@@ -76,6 +82,10 @@ public class ProductDetailsActivity extends AppCompatActivity {
         btnOffer = findViewById(R.id.btnOffer);
         btnBuy = findViewById(R.id.btnBuy);
         ivLiked = findViewById(R.id.ivLiked);
+        ivAR = findViewById(R.id.ivAR);
+
+        getUpdatedLike();
+        maybeEnableArButton();
 
         tvTitle.setText(product.getTitle());
         tvPrice.setText("$" + String.valueOf(product.getPrice()));
@@ -109,12 +119,78 @@ public class ProductDetailsActivity extends AppCompatActivity {
 
         });
 
+        ivLiked.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (liked) {
+                    dislikeProduct();
+                    liked = false;
+                    ivLiked.setImageDrawable(ProductDetailsActivity.this.getResources().getDrawable(R.drawable.ufi_heart));
+                } else {
+                    likeProduct();
+                    liked = true;
+                    ivLiked.setImageDrawable(ProductDetailsActivity.this.getResources().getDrawable(R.drawable.ufi_heart_active));
+                }
+            }
+        });
+
         btnBuy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 checkChat();
             }
         });
+
+        ivAR.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(ProductDetailsActivity.this, AugmentedProductActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        
+        if (!CameraPermissionHelper.hasCameraPermission(this)) {
+            CameraPermissionHelper.requestCameraPermission(this);
+            return;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        if (!CameraPermissionHelper.hasCameraPermission(this)) {
+            Toast.makeText(this, "Camera permission is needed to run this application", Toast.LENGTH_LONG)
+                    .show();
+            if (!CameraPermissionHelper.shouldShowRequestPermissionRationale(this)) {
+                // Permission denied with checking "Do not ask again".
+                CameraPermissionHelper.launchPermissionSettings(this);
+            }
+            finish();
+        }
+    }
+
+    void maybeEnableArButton() {
+        ArCoreApk.Availability availability = ArCoreApk.getInstance().checkAvailability(this);
+        if (availability.isTransient()) {
+            // Re-query at 5Hz while compatibility is checked in the background.
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    maybeEnableArButton();
+                }
+            }, 200);
+        }
+        if (availability.isSupported()) {
+            ivAR.setVisibility(View.VISIBLE);
+            ivAR.setEnabled(true);
+        } else {
+            ivAR.setVisibility(View.INVISIBLE);
+            ivAR.setEnabled(false);
+        }
     }
 
     private void getChatActivity(String chatId) {
@@ -214,6 +290,12 @@ public class ProductDetailsActivity extends AppCompatActivity {
                         Log.w(TAG, "Error writing image", e);
                     }
                 });
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
     public void dislikeProduct() {

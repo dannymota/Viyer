@@ -30,6 +30,7 @@ public class LoginActivity extends AppCompatActivity {
     private TextInputLayout etEmail;
     private TextInputLayout etPassword;
     public FirebaseAuth mAuth;
+    private TextView tvPhoneAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +47,7 @@ public class LoginActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
         btnSignup = findViewById(R.id.btnSignUp);
+        tvPhoneAuth = findViewById(R.id.tvPhoneAuth);
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -60,6 +62,13 @@ public class LoginActivity extends AppCompatActivity {
                 getSignUpActivity();
             }
         });
+
+        tvPhoneAuth.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getPhoneAuthActivity();
+            }
+        });
     }
 
     private void getMainActivity() {
@@ -70,6 +79,11 @@ public class LoginActivity extends AppCompatActivity {
 
     private void getSignUpActivity() {
         Intent i = new Intent(this, SignUpActivity.class);
+        startActivity(i);
+    }
+
+    private void getPhoneAuthActivity() {
+        Intent i = new Intent(this, PhoneAuthActivity.class);
         startActivity(i);
     }
 

@@ -2,12 +2,14 @@ package com.example.viyer.adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityOptionsCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -23,6 +25,8 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
 
     List<Product> products;
     Context context;
+    private static final int MENU_ITEM_VIEW_TYPE = 0;
+    private static final int UNIFIED_NATIVE_AD_VIEW_TYPE = 1;
 
     public ProductsAdapter(Context context, List<Product> photoUrls) {
         this.products = photoUrls;
@@ -79,7 +83,9 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
                 Product product = products.get(position);
                 Intent intent = new Intent(context, ProductDetailsActivity.class);
                 intent.putExtra(Product.class.getSimpleName(), Parcels.wrap(product));
-                context.startActivity(intent);
+                Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(context,
+                        android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
+                context.startActivity(intent, bundle);
             }
         }
     }

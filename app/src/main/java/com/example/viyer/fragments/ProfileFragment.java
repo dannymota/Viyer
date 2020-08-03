@@ -140,9 +140,11 @@ public class ProfileFragment extends Fragment {
                 if (tab.getPosition() == 0) {
                     adapter.clear();
                     getSelling();
+                    refreshAdapter();
                 } else {
                     adapter.clear();
                     getLikes();
+                    refreshAdapter();
                 }
             }
 
@@ -219,5 +221,15 @@ public class ProfileFragment extends Fragment {
                         }
                     }
                 });
+    }
+
+    public void refreshAdapter() {
+        rvView.setAdapter(adapter);
+
+        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
+        layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
+
+        rvView.setLayoutManager(layoutManager);
+        rvView.setItemAnimator(new DefaultItemAnimator());
     }
 }

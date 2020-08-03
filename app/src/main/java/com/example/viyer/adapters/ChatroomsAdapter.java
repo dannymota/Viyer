@@ -3,6 +3,7 @@ package com.example.viyer.adapters;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityOptionsCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.viyer.ChatActivity;
@@ -114,7 +116,9 @@ public class ChatroomsAdapter extends RecyclerView.Adapter<ChatroomsAdapter.View
                             intent.putExtra("chatId", chatroom.getDocumentId());
                             intent.putExtra("buyerUid", chatroom.getBuyerUid());
                             intent.putExtra(Product.class.getSimpleName(), Parcels.wrap(product));
-                            context.startActivity(intent);
+                            Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(context,
+                                    R.anim.slide_in_right, R.anim.slide_out_left).toBundle();
+                            context.startActivity(intent, bundle);
                         } else {
                             Log.d(TAG, "Document doesn't exist: ", task.getException());
                         }

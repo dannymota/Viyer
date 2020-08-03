@@ -165,6 +165,12 @@ public class ChatActivity extends AppCompatActivity {
                 });
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(android.R.anim.slide_out_right, android.R.anim.slide_in_left);
+    }
+
     private void updateRecentChatMessage(String message, String chatId) {
         LoginActivity.db().collection("chats")
                 .document(chatId)

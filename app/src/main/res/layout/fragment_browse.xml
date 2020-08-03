@@ -8,12 +8,12 @@
 
     <!-- TODO: Update blank fragment layout -->
     <TextView
-        android:id="@+id/tvSort"
+        android:id="@+id/tvSortBy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:text="Sort by Location ▼"
+        android:text="Sort by Recent"
         android:textSize="16sp"
         android:textStyle="bold"
         android:visibility="invisible"
@@ -29,7 +29,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvSort">
+        app:layout_constraintTop_toBottomOf="@+id/tvSortBy">
 
     </androidx.recyclerview.widget.RecyclerView>
 
@@ -76,5 +76,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ivDog" />
+
+    <ImageView
+        android:id="@+id/ivSort"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:src="@drawable/ic_baseline_arrow_drop_down_24"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/tvSortBy"
+        app:layout_constraintStart_toEndOf="@+id/tvSortBy"
+        app:layout_constraintTop_toTopOf="@+id/tvSortBy" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -8,8 +8,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.OrientationHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
@@ -27,21 +25,14 @@ import com.example.viyer.R;
 import com.example.viyer.adapters.ProductsAdapter;
 import com.example.viyer.models.Product;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.example.viyer.MainActivity.TAG;
 
@@ -67,8 +58,10 @@ public class BrowseFragment extends Fragment {
     private FirebaseUser user;
     private TextView tvNoMessage;
     private ImageView ivDog;
-    private TextView tvSort;
+    private TextView tvSortBy;
     private TextView tvDetail;
+    private int checkItem;
+    private ImageView ivSort;
 
     public BrowseFragment() {
         // Required empty public constructor
@@ -113,22 +106,19 @@ public class BrowseFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        checkItem = 0;
+
         btnLogout = view.findViewById(R.id.btnLogout);
         rvProducts = view.findViewById(R.id.rvProducts);
         tvNoMessage = view.findViewById(R.id.tvNoMessage);
-        tvSort = view.findViewById(R.id.tvSort);
+        tvSortBy = view.findViewById(R.id.tvSortBy);
         tvDetail = view.findViewById(R.id.tvDetail);
         ivDog = view.findViewById(R.id.ivDog);
+        ivSort = view.findViewById(R.id.ivSort);
 
         products = new ArrayList<>();
         adapter = new ProductsAdapter(getContext(), products);
-        rvProducts.setAdapter(adapter);
-
-        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
-        layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
-
-        rvProducts.setLayoutManager(layoutManager);
-        rvProducts.setItemAnimator(new DefaultItemAnimator());
+        refreshAdapter();
 
         btnLogout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -140,10 +130,17 @@ public class BrowseFragment extends Fragment {
 
         getProducts();
 
-        tvSort.setOnClickListener(new View.OnClickListener() {
+        tvSortBy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 changeSorting();
+            }
+        });
+
+        ivSort.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
             }
         });
     }
@@ -173,9 +170,9 @@ public class BrowseFragment extends Fragment {
                                 tvNoMessage.setVisibility(View.INVISIBLE);
                                 ivDog.setVisibility(View.INVISIBLE);
                                 tvDetail.setVisibility(View.VISIBLE);
-                                tvSort.setVisibility(View.VISIBLE);
+                                tvSortBy.setVisibility(View.VISIBLE);
+                                ivSort.setVisibility(View.VISIBLE);
                             }
-
                             products.addAll(result);
                             adapter.notifyDataSetChanged();
                         } else {
@@ -187,8 +184,7 @@ public class BrowseFragment extends Fragment {
 
     private void changeSorting() {
         final CharSequence[] MAP_TYPE_ITEMS =
-                {"Road", "Satellite", "Hybrid"};
-        int checkItem = 0;
+                {"Recent", "Price", "Location"};
 
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(getContext());
         builder.setTitle("Sort by");
@@ -199,21 +195,73 @@ public class BrowseFragment extends Fragment {
                     public void onClick(DialogInterface dialog, int item) {
                         switch (item) {
                             case 0:
-                                Toast.makeText(getContext(), "Item 0 clicked ", Toast.LENGTH_SHORT).show();
+                                tvSortBy.setText("Sort by Recent");
+                                checkItem = 0;
+                                adapter.clear();
+                                getProducts();
+                                adapter.notifyDataSetChanged();
+                                refreshAdapter();
                                 break;
                             case 1:
-                                Toast.makeText(getContext(), "Item 1 clicked ", Toast.LENGTH_SHORT).show();
+                                tvSortBy.setText("Sort by Price");
+                                checkItem = 1;
+                                mergeSort(products);
+                                adapter.notifyDataSetChanged();
+                                refreshAdapter();
                                 break;
                             case 2:
-                                Toast.makeText(getContext(), "Item 2 clicked ", Toast.LENGTH_SHORT).show();
+                                tvSortBy.setText("Sort by Location");
+                                checkItem = 2;
                                 break;
                         }
-                        if (adapter.getItemViewType(item) == 0) {
-                            dialog.dismiss();
-                        }
+                        dialog.dismiss();
                     }
                 }
         );
         builder.show();
+    }
+
+    private static List<Product> merge(final List<Product> left, final List<Product> right) {
+        final List<Product> merged = new ArrayList<>();
+        while (!left.isEmpty() && !right.isEmpty()) {
+            if(left.get(0).getPrice() - right.get(0).getPrice() <= 0) {
+                merged.add(left.remove(0));
+            } else {
+                merged.add(right.remove(0));
+            }
+        }
+        merged.addAll(left);
+        merged.addAll(right);
+        return merged;
+    }
+
+    public static void mergeSort(final List<Product> products) {
+        boolean addSwitch = true;
+        if (products.size() >= 2) {
+            final List<Product> left = new ArrayList<Product>();
+            final List<Product> right = new ArrayList<Product>();
+
+            while (!products.isEmpty()) {
+                if (addSwitch) {
+                    left.add(products.remove(0));
+                } else {
+                    right.add(products.remove(products.size() / 2));
+                }
+                addSwitch = !addSwitch;
+            }
+            mergeSort(left);
+            mergeSort(right);
+            products.addAll(merge(left, right));
+        }
+    }
+
+    public void refreshAdapter() {
+        rvProducts.setAdapter(adapter);
+
+        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
+        layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
+
+        rvProducts.setLayoutManager(layoutManager);
+        rvProducts.setItemAnimator(new DefaultItemAnimator());
     }
 }
