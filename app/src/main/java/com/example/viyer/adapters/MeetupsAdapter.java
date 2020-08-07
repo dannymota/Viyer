@@ -5,22 +5,32 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.example.viyer.LoginActivity;
+import com.example.viyer.MainActivity;
 import com.example.viyer.R;
+import com.example.viyer.fragments.MeetupFragment;
 import com.example.viyer.models.Offer;
 import com.example.viyer.models.Product;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.GeoPoint;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 import static com.example.viyer.MainActivity.TAG;
@@ -60,31 +70,56 @@ public class MeetupsAdapter extends RecyclerView.Adapter<MeetupsAdapter.ViewHold
         private TextView tvDate;
         private TextView tvLocation;
         private TextView tvAgentType;
-        private ImageView map;
+        private SupportMapFragment mapFragment;
+        private GoogleMap map;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvTitle = itemView.findViewById(R.id.tvTitle);
-            tvDate = itemView.findViewById(R.id.tvTitle);
+            tvDate = itemView.findViewById(R.id.tvDate);
             tvLocation = itemView.findViewById(R.id.etLocation);
             tvAgentType = itemView.findViewById(R.id.tvLocation);
-            map = itemView.findViewById(R.id.map);
             itemView.setOnClickListener(this);
         }
 
         public void bind(Offer offer) {
+            DateFormat df = new SimpleDateFormat("dd MMMM yyyy");
             getProduct(offer.getProductId());
-            tvLocation.setText(offer.getLocation().getLatitude() + ", " + offer.getLocation().getLongitude());
+            tvLocation.setText(offer.getAddress());
             tvAgentType.setText("Buying");
+            tvDate.setText(df.format(offer.getDate()));
 
-            String url ="https://maps.googleapis.com/maps/api/staticmap?";
-            url+="&zoom=14";
-            url+="&size=330x130";
-            url+="&maptype=roadmap";
-            url+="&markers=color:green%7Clabel:G%7C"+offer.getLocation().getLatitude()+", "+offer.getLocation().getLongitude();
-            url+="&key=AIzaSyAOJDiBTvLbWl4kX80Dzs-eRE3YcFVlXlw";
+            mapFragment = (SupportMapFragment) ((MainActivity) context).getSupportFragmentManager().findFragmentById(R.id.map);
 
-            Glide.with(context).load(url).into(map);
+            if (mapFragment != null) {
+                mapFragment.getMapAsync(new OnMapReadyCallback() {
+                    @Override
+                    public void onMapReady(GoogleMap map) {
+                        loadMap(map, offer);
+                    }
+                });
+            }
+        }
+
+        protected void loadMap(GoogleMap googleMap, Offer offer) {
+            map = googleMap;
+            if (map != null) {
+                focusLocation(offer);
+            }
+        }
+
+        protected void focusLocation(Offer offer) {
+            GeoPoint geoPoint = offer.getLocation();
+
+            LatLng latLng = new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude());
+
+            map.clear();
+            MarkerOptions markerOptions = new MarkerOptions();
+            markerOptions.position(latLng);
+            map.addMarker(markerOptions);
+
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 18);
+            map.moveCamera(cameraUpdate);
         }
 
         @Override

@@ -2,9 +2,11 @@
 
 <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/ivProduct"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="8dp"
     android:layout_marginBottom="8dp"
-    android:src="@drawable/googleg_standard_color_18"></ImageView>
+    android:src="@drawable/googleg_standard_color_18">
+</ImageView>

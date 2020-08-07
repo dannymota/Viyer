@@ -235,6 +235,9 @@ public class ProductDetailsActivity extends AppCompatActivity {
         chat.put("offer", offer);
         chat.put("response", false);
         chat.put("status", false);
+        chat.put("date", null);
+        chat.put("address", null);
+        chat.put("view", false);
 
         LoginActivity.db().collection("offers")
                 .add(chat)

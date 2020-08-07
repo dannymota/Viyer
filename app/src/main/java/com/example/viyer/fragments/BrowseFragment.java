@@ -1,18 +1,27 @@
 package com.example.viyer.fragments;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -24,6 +33,13 @@ import com.example.viyer.LoginActivity;
 import com.example.viyer.R;
 import com.example.viyer.adapters.ProductsAdapter;
 import com.example.viyer.models.Product;
+import com.example.viyer.models.ProductAdsData;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdLoader;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.formats.NativeAd;
+import com.google.android.gms.ads.formats.UnifiedNativeAd;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -35,6 +51,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.viyer.MainActivity.TAG;
+import static com.example.viyer.adapters.ProductsAdapter.UNIFIED_ADS_VIEW;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -51,7 +68,6 @@ public class BrowseFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-    private Button btnLogout;
     private RecyclerView rvProducts;
     private ProductsAdapter adapter;
     private List<Product> products;
@@ -62,6 +78,12 @@ public class BrowseFragment extends Fragment {
     private TextView tvDetail;
     private int checkItem;
     private ImageView ivSort;
+    private Toolbar mToolbar;
+    public int NUMBER_OF_ADS;
+    private AdLoader adLoader;
+    private List<UnifiedNativeAd> mNativeAds;
+    private List<ProductAdsData> productAds;
+    private Context mContext;
 
     public BrowseFragment() {
         // Required empty public constructor
@@ -93,6 +115,7 @@ public class BrowseFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
         user = FirebaseAuth.getInstance().getCurrentUser();
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -103,12 +126,40 @@ public class BrowseFragment extends Fragment {
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu,inflater);
+        inflater.inflate(R.menu.browse_fragment, menu);
+        MenuItem menuItem = menu.findItem(R.id.browse_search);
+        SearchView searchView = (SearchView) menuItem.getActionView();
+        searchView.setQueryHint("Search for a product...");
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                adapter.filter(query);
+                refreshAdapter();
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                adapter.filter(newText);
+                refreshAdapter();
+                return true;
+            }
+        });
+    }
+
+    @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         checkItem = 0;
 
-        btnLogout = view.findViewById(R.id.btnLogout);
+        mToolbar = view.findViewById(R.id.browseToolbar);
+        ((AppCompatActivity)getActivity()).setSupportActionBar(mToolbar);
+        mToolbar.setTitle("Browse");
+
         rvProducts = view.findViewById(R.id.rvProducts);
         tvNoMessage = view.findViewById(R.id.tvNoMessage);
         tvSortBy = view.findViewById(R.id.tvSortBy);
@@ -116,19 +167,12 @@ public class BrowseFragment extends Fragment {
         ivDog = view.findViewById(R.id.ivDog);
         ivSort = view.findViewById(R.id.ivSort);
 
-        products = new ArrayList<>();
-        adapter = new ProductsAdapter(getContext(), products);
-        refreshAdapter();
-
-        btnLogout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                FirebaseAuth.getInstance().signOut();
-                getLoginActivity();
-            }
-        });
-
+        mNativeAds = new ArrayList<>();
+        productAds = new ArrayList<>();
         getProducts();
+
+        adapter = new ProductsAdapter(getContext(), productAds);
+        refreshAdapter();
 
         tvSortBy.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -145,10 +189,65 @@ public class BrowseFragment extends Fragment {
         });
     }
 
-    private void getLoginActivity() {
-        Intent i = new Intent(getContext(), LoginActivity.class);
-        startActivity(i);
-        getActivity().onBackPressed();
+    private void insertAdsInMenuItems() {
+        if (mNativeAds.size() <= 0) {
+            return;
+        }
+
+        int offset = (productAds.size() / mNativeAds.size()) + 1;
+        int index = 0;
+        for (UnifiedNativeAd ad: mNativeAds) {
+            ProductAdsData adsData = new ProductAdsData();
+            adsData.product = null;
+            adsData.ads = ad;
+            adsData.type = 1;
+            productAds.add(index, adsData);
+            index = index + offset;
+        }
+
+        adapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        mContext = context;
+        super.onAttach(context);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mContext = null;
+    }
+
+    private void loadNativeAds() {
+        AdLoader.Builder builder = new AdLoader.Builder(mContext, getString(R.string.admob_ad_id));
+        adLoader = builder.forUnifiedNativeAd(
+                new UnifiedNativeAd.OnUnifiedNativeAdLoadedListener() {
+                    @Override
+                    public void onUnifiedNativeAdLoaded(UnifiedNativeAd unifiedNativeAd) {
+                        // A native ad loaded successfully, check if the ad loader has finished loading
+                        // and if so, insert the ads into the list.
+                        mNativeAds.add(unifiedNativeAd);
+                        if (!adLoader.isLoading()) {
+                            insertAdsInMenuItems();
+                        }
+                    }
+                }).withAdListener(
+                new AdListener() {
+                    @Override
+                    public void onAdFailedToLoad(int errorCode) {
+                        // A native ad failed to load, check if the ad loader has finished loading
+                        // and if so, insert the ads into the list.
+                        Log.e(TAG, "The previous native ad failed to load. Attempting to" + " load another.");
+                        if (!adLoader.isLoading()) {
+                            insertAdsInMenuItems();
+                        }
+                    }
+                }).build();
+
+        // Load the Native Express ad.
+        adLoader.loadAds(new AdRequest.Builder().build(), NUMBER_OF_ADS);
     }
 
     private void getProducts() {
@@ -160,21 +259,37 @@ public class BrowseFragment extends Fragment {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
 
                         if (task.isSuccessful()) {
+
+                            List<ProductAdsData> resultsList = new ArrayList<>();
                             List<Product> result = task.getResult().toObjects(Product.class);
                             result.removeIf(p -> p.getUid().equals(user.getUid()));
+                            for (Product product : result) {
+                                ProductAdsData data = new ProductAdsData();
+                                data.type = 2;
+                                data.product = product;
+                                data.ads = null;
+                                resultsList.add(data);
+                            }
 
-                            if (result.isEmpty()) {
+                            if (resultsList.isEmpty()) {
                                 tvNoMessage.setVisibility(View.VISIBLE);
                                 ivDog.setVisibility(View.VISIBLE);
+                                rvProducts.setVisibility(View.INVISIBLE);
                             } else {
                                 tvNoMessage.setVisibility(View.INVISIBLE);
                                 ivDog.setVisibility(View.INVISIBLE);
                                 tvDetail.setVisibility(View.VISIBLE);
                                 tvSortBy.setVisibility(View.VISIBLE);
                                 ivSort.setVisibility(View.VISIBLE);
+                                rvProducts.setVisibility(View.VISIBLE);
                             }
-                            products.addAll(result);
+
+                            productAds.addAll(resultsList);
+//                            adapter.setProductAdsList(resultsList);
+                            adapter.copyProducts(resultsList);
                             adapter.notifyDataSetChanged();
+                            NUMBER_OF_ADS = (int) Math.floor(productAds.size() / 3);
+                            loadNativeAds();
                         } else {
                             Log.d(TAG, "Error getting documents: ", task.getException());
                         }
@@ -258,10 +373,23 @@ public class BrowseFragment extends Fragment {
     public void refreshAdapter() {
         rvProducts.setAdapter(adapter);
 
-        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
-        layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
+//        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
+//        layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
+
+        GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 2);
 
         rvProducts.setLayoutManager(layoutManager);
         rvProducts.setItemAnimator(new DefaultItemAnimator());
+
+        layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                int viewType = adapter.getItemViewType(position);
+                if (viewType == UNIFIED_ADS_VIEW) {
+                    return 2;
+                }
+                return 1;
+            }
+        });
     }
 }

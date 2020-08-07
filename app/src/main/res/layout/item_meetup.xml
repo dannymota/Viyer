@@ -12,7 +12,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:text="Title"
-        android:textSize="18sp"
+        android:textSize="24sp"
         map:layout_constraintBottom_toBottomOf="@+id/tvDate"
         map:layout_constraintEnd_toStartOf="@+id/tvDate"
         map:layout_constraintStart_toStartOf="parent"
@@ -33,32 +33,36 @@
         android:id="@+id/tvDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:text="Date"
-        android:textSize="24sp"
+        android:textSize="18sp"
         map:layout_constraintEnd_toEndOf="parent"
-        tools:layout_editor_absoluteY="208dp" />
+        map:layout_constraintTop_toBottomOf="@+id/map" />
 
     <TextView
         android:id="@+id/etLocation"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         android:text="Location"
         android:textSize="14sp"
-        map:layout_constraintBottom_toBottomOf="@+id/tvLocation"
-        map:layout_constraintStart_toStartOf="parent"
-        map:layout_constraintTop_toTopOf="@+id/tvLocation" />
 
-    <ImageView
+        map:layout_constraintBottom_toBottomOf="@+id/tvLocation"
+        map:layout_constraintEnd_toStartOf="@+id/tvLocation"
+        map:layout_constraintStart_toStartOf="parent"
+        map:layout_constraintTop_toBottomOf="@+id/tvTitle" />
+
+    <fragment
         android:id="@+id/map"
-        android:layout_width="0dp"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:layout_marginBottom="8dp"
-        map:layout_constraintBottom_toTopOf="@+id/tvDate"
         map:layout_constraintEnd_toEndOf="parent"
         map:layout_constraintStart_toStartOf="parent"
         map:layout_constraintTop_toTopOf="parent"
-        tools:srcCompat="@tools:sample/avatars" />
+        tools:context="com.example.viyer.MeetupFragment" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

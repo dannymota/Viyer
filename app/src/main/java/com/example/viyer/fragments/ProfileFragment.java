@@ -1,11 +1,14 @@
 package com.example.viyer.fragments;
 
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -14,6 +17,9 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -24,6 +30,7 @@ import com.example.viyer.R;
 import com.example.viyer.adapters.ProductsAdapter;
 import com.example.viyer.layouts.SquareRelativeLayout;
 import com.example.viyer.models.Product;
+import com.example.viyer.models.ProductAdsData;
 import com.example.viyer.models.User;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -65,8 +72,9 @@ public class ProfileFragment extends Fragment {
     private ImageView ivVerified;
     private RecyclerView rvView;
     private ProductsAdapter adapter;
-    private List<Product> products;
+    private List<ProductAdsData> products;
     private TabLayout tabLayout;
+    private Toolbar mToolbar;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -97,6 +105,7 @@ public class ProfileFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -104,6 +113,32 @@ public class ProfileFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_profile, container, false);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.profile_fragment, menu);
+        MenuItem menuItem = menu.findItem(R.id.profileLogout);
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.profileLogout:
+                FirebaseAuth.getInstance().signOut();
+                getLoginActivity();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void getLoginActivity() {
+        Intent i = new Intent(getContext(), LoginActivity.class);
+        startActivity(i);
+        getActivity().onBackPressed();
     }
 
     @Override
@@ -116,6 +151,10 @@ public class ProfileFragment extends Fragment {
         ivVerified = view.findViewById(R.id.ivVerified);
         rvView = view.findViewById(R.id.rvView);
         tabLayout = view.findViewById(R.id.tabLayout);
+
+        mToolbar = view.findViewById(R.id.profileToolbar);
+        ((AppCompatActivity)getActivity()).setSupportActionBar(mToolbar);
+        mToolbar.setTitle("Profile");
 
         products = new ArrayList<>();
         adapter = new ProductsAdapter(getContext(), products);
@@ -194,9 +233,16 @@ public class ProfileFragment extends Fragment {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
 
                         if (task.isSuccessful()) {
+                            List<ProductAdsData> resultsList = new ArrayList<>();
                             List<Product> result = task.getResult().toObjects(Product.class);
-                            products.addAll(result);
-                            adapter.notifyDataSetChanged();
+                            for (Product product : result) {
+                                ProductAdsData data = new ProductAdsData();
+                                data.type = 2;
+                                data.product = product;
+                                data.ads = null;
+                                resultsList.add(data);
+                            }
+                            adapter.setProductAdsList(resultsList);
                         } else {
                             Log.d(TAG, "Error getting documents: ", task.getException());
                         }
@@ -213,9 +259,16 @@ public class ProfileFragment extends Fragment {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
 
                         if (task.isSuccessful()) {
+                            List<ProductAdsData> resultsList = new ArrayList<>();
                             List<Product> result = task.getResult().toObjects(Product.class);
-                            products.addAll(result);
-                            adapter.notifyDataSetChanged();
+                            for (Product product : result) {
+                                ProductAdsData data = new ProductAdsData();
+                                data.type = 2;
+                                data.product = product;
+                                data.ads = null;
+                                resultsList.add(data);
+                            }
+                            adapter.setProductAdsList(resultsList);
                         } else {
                             Log.d(TAG, "Error getting documents: ", task.getException());
                         }

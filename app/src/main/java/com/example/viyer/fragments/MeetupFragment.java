@@ -4,6 +4,8 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -47,6 +49,7 @@ public class MeetupFragment extends Fragment {
     private RecyclerView rvMeetups;
     private List<Offer> offers;
     private MeetupsAdapter adapter;
+    private Toolbar mToolbar;
 
     public MeetupFragment() {
         // Required empty public constructor
@@ -78,6 +81,7 @@ public class MeetupFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
         user = FirebaseAuth.getInstance().getCurrentUser();
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -94,18 +98,24 @@ public class MeetupFragment extends Fragment {
 
         offers = new ArrayList<>();
 
+        mToolbar = view.findViewById(R.id.browseMeetup);
+        ((AppCompatActivity)getActivity()).setSupportActionBar(mToolbar);
+        mToolbar.setTitle("Meetup");
+
         adapter = new MeetupsAdapter(getContext(), offers);
         rvMeetups.setAdapter(adapter);
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
         rvMeetups.setLayoutManager(layoutManager);
 
-        getOffers();
+        getBuyingOffers();
     }
 
-    private void getOffers() {
+    private void getBuyingOffers() {
         LoginActivity.db().collection("offers")
                 .whereEqualTo("buyerUid", user.getUid())
+                .whereEqualTo("response", true)
+                .whereEqualTo("status", true)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override

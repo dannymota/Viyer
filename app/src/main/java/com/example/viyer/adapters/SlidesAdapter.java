@@ -8,12 +8,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.viewpager.widget.PagerAdapter;
 
 import com.bumptech.glide.Glide;
 import com.example.viyer.R;
-import com.example.viyer.models.Product;
 
 import java.util.List;
 
@@ -45,7 +43,7 @@ public class SlidesAdapter extends PagerAdapter {
 
         layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View view = layoutInflater.inflate(R.layout.item_slide_product, container, false);
-        ivProduct = (ImageView) view.findViewById(R.id.ivProduct);
+        ivProduct = (ImageView) view.findViewById(R.id.ivCardView);
 
         Glide.with(context).load(photoUrls.get(position)).into(ivProduct);
         container.addView(view);

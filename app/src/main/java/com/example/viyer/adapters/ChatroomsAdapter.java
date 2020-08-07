@@ -116,9 +116,7 @@ public class ChatroomsAdapter extends RecyclerView.Adapter<ChatroomsAdapter.View
                             intent.putExtra("chatId", chatroom.getDocumentId());
                             intent.putExtra("buyerUid", chatroom.getBuyerUid());
                             intent.putExtra(Product.class.getSimpleName(), Parcels.wrap(product));
-                            Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(context,
-                                    R.anim.slide_in_right, R.anim.slide_out_left).toBundle();
-                            context.startActivity(intent, bundle);
+                            context.startActivity(intent);
                         } else {
                             Log.d(TAG, "Document doesn't exist: ", task.getException());
                         }

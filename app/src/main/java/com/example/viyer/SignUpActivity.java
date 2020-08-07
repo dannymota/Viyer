@@ -17,9 +17,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +26,6 @@ public class SignUpActivity extends AppCompatActivity {
     public static final String TAG = "SignUpActivity";
     private TextInputLayout etFirstName;
     private TextInputLayout etLastName;
-    private TextInputLayout etPhoneNumber;
     private TextInputLayout etLocation;
     private TextInputLayout etEmail;
     private TextInputLayout etPassword;
@@ -41,9 +38,8 @@ public class SignUpActivity extends AppCompatActivity {
 
         etFirstName = findViewById(R.id.etFirstName);
         etLastName = findViewById(R.id.etLastName);
-        etPhoneNumber = findViewById(R.id.etPhoneNumber);
         etLocation = findViewById(R.id.etLocation);
-        etEmail = findViewById(R.id.etEmail);
+        etEmail = findViewById(R.id.etDate);
         etPassword = findViewById(R.id.etPassword);
         btnSignUp = findViewById(R.id.btnSignUp);
 
@@ -81,7 +77,6 @@ public class SignUpActivity extends AppCompatActivity {
         Map<String, Object> user = new HashMap<>();
         user.put("firstName", getTextInputString(etFirstName));
         user.put("lastName", getTextInputString(etLastName));
-        user.put("phoneNumber", getTextInputString(etPhoneNumber));
         user.put("location", getTextInputString(etLocation));
         user.put("email", getTextInputString(etEmail));
         user.put("updatedAt", new Timestamp(new Date()));

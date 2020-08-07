@@ -19,6 +19,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -96,6 +98,7 @@ public class PostFragment extends Fragment {
     private ScrollView scrollView;
     private Uri photoUri;
     private ProgressDialog uploadProgressDialog;
+    private Toolbar mToolbar;
 
     public PostFragment() {}
 
@@ -118,6 +121,7 @@ public class PostFragment extends Fragment {
 
         user = FirebaseAuth.getInstance().getCurrentUser();
         fileUploader = new FirestoreProductFileUploader();
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -138,6 +142,10 @@ public class PostFragment extends Fragment {
         etTitle = view.findViewById(R.id.etTitle);
         etDesc = view.findViewById(R.id.etDesc);
         etPrice = view.findViewById(R.id.etPrice);
+
+        mToolbar = view.findViewById(R.id.browsePost);
+        ((AppCompatActivity)getActivity()).setSupportActionBar(mToolbar);
+        mToolbar.setTitle("Post");
 
         uploadProgressDialog = new ProgressDialog(getContext());
         uploadProgressDialog.setTitle("Uploading...");
