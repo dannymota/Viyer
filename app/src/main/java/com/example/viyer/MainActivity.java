@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
         bottomNavigationView = findViewById(R.id.bottomNavigation);
         fragmentManager = getSupportFragmentManager();
 
-        bottomNavigationView.getOrCreateBadge(R.id.action_chat).setNumber(1);
+//        bottomNavigationView.getOrCreateBadge(R.id.action_chat).setNumber(1);
 
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override

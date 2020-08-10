@@ -2,7 +2,6 @@ package com.example.viyer.fragments;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -10,7 +9,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -24,21 +22,20 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.viyer.LoginActivity;
 import com.example.viyer.R;
 import com.example.viyer.adapters.ProductsAdapter;
 import com.example.viyer.models.Product;
 import com.example.viyer.models.ProductAdsData;
+import com.google.android.flexbox.FlexDirection;
+import com.google.android.flexbox.FlexboxLayoutManager;
+import com.google.android.flexbox.JustifyContent;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdLoader;
 import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.formats.NativeAd;
 import com.google.android.gms.ads.formats.UnifiedNativeAd;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -48,6 +45,9 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import static com.example.viyer.MainActivity.TAG;
@@ -84,6 +84,7 @@ public class BrowseFragment extends Fragment {
     private List<UnifiedNativeAd> mNativeAds;
     private List<ProductAdsData> productAds;
     private Context mContext;
+    private Boolean isDescending;
 
     public BrowseFragment() {
         // Required empty public constructor
@@ -155,6 +156,7 @@ public class BrowseFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         checkItem = 0;
+        isDescending = false;
 
         mToolbar = view.findViewById(R.id.browseToolbar);
         ((AppCompatActivity)getActivity()).setSupportActionBar(mToolbar);
@@ -184,7 +186,15 @@ public class BrowseFragment extends Fragment {
         ivSort.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                if (isDescending) {
+                    isDescending = false;
+                    ivSort.setImageResource(R.drawable.ic_baseline_arrow_drop_down_24);
+                } else {
+                    isDescending = true;
+                    ivSort.setImageResource(R.drawable.ic_baseline_arrow_drop_up_24);
+                }
+                Collections.reverse(productAds);
+                refreshAdapter();
             }
         });
     }
@@ -313,15 +323,27 @@ public class BrowseFragment extends Fragment {
                                 tvSortBy.setText("Sort by Recent");
                                 checkItem = 0;
                                 adapter.clear();
+                                mNativeAds.clear();
                                 getProducts();
                                 adapter.notifyDataSetChanged();
+                                ivSort.setImageResource(R.drawable.ic_baseline_arrow_drop_down_24);
                                 refreshAdapter();
                                 break;
                             case 1:
                                 tvSortBy.setText("Sort by Price");
+                                mNativeAds.clear();
                                 checkItem = 1;
-                                mergeSort(products);
+
+                                for(Iterator<ProductAdsData> i = productAds.iterator(); i.hasNext();) {
+                                    ProductAdsData name = i.next();
+                                    if (name.getProduct() == null) {
+                                        i.remove();
+                                    }
+                                }
+                                mergeSort(productAds);
+                                loadNativeAds();
                                 adapter.notifyDataSetChanged();
+                                ivSort.setImageResource(R.drawable.ic_baseline_arrow_drop_down_24);
                                 refreshAdapter();
                                 break;
                             case 2:
@@ -336,10 +358,10 @@ public class BrowseFragment extends Fragment {
         builder.show();
     }
 
-    private static List<Product> merge(final List<Product> left, final List<Product> right) {
-        final List<Product> merged = new ArrayList<>();
+    private static List<ProductAdsData> merge(final List<ProductAdsData> left, final List<ProductAdsData> right) {
+        final List<ProductAdsData> merged = new ArrayList<>();
         while (!left.isEmpty() && !right.isEmpty()) {
-            if(left.get(0).getPrice() - right.get(0).getPrice() <= 0) {
+            if(left.get(0).getProduct().getPrice() - right.get(0).getProduct().getPrice() <= 0) {
                 merged.add(left.remove(0));
             } else {
                 merged.add(right.remove(0));
@@ -350,11 +372,11 @@ public class BrowseFragment extends Fragment {
         return merged;
     }
 
-    public static void mergeSort(final List<Product> products) {
+    public static void mergeSort(final List<ProductAdsData> products) {
         boolean addSwitch = true;
         if (products.size() >= 2) {
-            final List<Product> left = new ArrayList<Product>();
-            final List<Product> right = new ArrayList<Product>();
+            final List<ProductAdsData> left = new ArrayList<>();
+            final List<ProductAdsData> right = new ArrayList<>();
 
             while (!products.isEmpty()) {
                 if (addSwitch) {
@@ -373,23 +395,10 @@ public class BrowseFragment extends Fragment {
     public void refreshAdapter() {
         rvProducts.setAdapter(adapter);
 
-//        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
-//        layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
-
-        GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 2);
+        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+        layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
 
         rvProducts.setLayoutManager(layoutManager);
         rvProducts.setItemAnimator(new DefaultItemAnimator());
-
-        layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
-            @Override
-            public int getSpanSize(int position) {
-                int viewType = adapter.getItemViewType(position);
-                if (viewType == UNIFIED_ADS_VIEW) {
-                    return 2;
-                }
-                return 1;
-            }
-        });
     }
 }

@@ -25,6 +25,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.GeoPoint;
@@ -72,6 +74,7 @@ public class MeetupsAdapter extends RecyclerView.Adapter<MeetupsAdapter.ViewHold
         private TextView tvAgentType;
         private SupportMapFragment mapFragment;
         private GoogleMap map;
+        private FirebaseUser user;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -79,6 +82,7 @@ public class MeetupsAdapter extends RecyclerView.Adapter<MeetupsAdapter.ViewHold
             tvDate = itemView.findViewById(R.id.tvDate);
             tvLocation = itemView.findViewById(R.id.etLocation);
             tvAgentType = itemView.findViewById(R.id.tvLocation);
+            user = FirebaseAuth.getInstance().getCurrentUser();
             itemView.setOnClickListener(this);
         }
 
@@ -86,7 +90,13 @@ public class MeetupsAdapter extends RecyclerView.Adapter<MeetupsAdapter.ViewHold
             DateFormat df = new SimpleDateFormat("dd MMMM yyyy");
             getProduct(offer.getProductId());
             tvLocation.setText(offer.getAddress());
-            tvAgentType.setText("Buying");
+
+            if (offer.getBuyerUid().equals(user.getUid())) {
+                tvAgentType.setText("Buying");
+            } else {
+                tvAgentType.setText("Selling");
+            }
+
             tvDate.setText(df.format(offer.getDate()));
 
             mapFragment = (SupportMapFragment) ((MainActivity) context).getSupportFragmentManager().findFragmentById(R.id.map);
@@ -147,5 +157,7 @@ public class MeetupsAdapter extends RecyclerView.Adapter<MeetupsAdapter.ViewHold
                 }
             });
         }
+
+
     }
 }

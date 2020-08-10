@@ -271,7 +271,6 @@ public class ChatActivity extends AppCompatActivity {
                         for (DocumentChange dc : snapshots.getDocumentChanges()) {
                             switch (dc.getType()) {
                                 case ADDED:
-                                case MODIFIED:
                                     Offer added = dc.getDocument().toObject(Offer.class);
                                     if (!added.getBuyerUid().equals(firebaseUser.getUid())
                                             && added.getLocation() != null
@@ -296,7 +295,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private void showOffer(Offer offer) {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
-        builder.setTitle("Offer Received")
+        builder.setTitle("Offer received")
                 .setMessage("Congratulations, you have an offer for " + product.getTitle()
                         + ". " + buyerUid + " is willing to pay "
                         + offer.getOffer() + " and meetup at " + offer.getAddress() + ". Do you accept?");

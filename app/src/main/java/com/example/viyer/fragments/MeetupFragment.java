@@ -109,11 +109,32 @@ public class MeetupFragment extends Fragment {
         rvMeetups.setLayoutManager(layoutManager);
 
         getBuyingOffers();
+        getSellingOffers();
     }
 
     private void getBuyingOffers() {
         LoginActivity.db().collection("offers")
                 .whereEqualTo("buyerUid", user.getUid())
+                .whereEqualTo("response", true)
+                .whereEqualTo("status", true)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            List<Offer> result = task.getResult().toObjects(Offer.class);
+                            offers.addAll(result);
+                            adapter.notifyDataSetChanged();
+                        } else {
+                            Log.d(TAG, "Error getting documents: ", task.getException());
+                        }
+                    }
+                });
+    }
+
+    private void getSellingOffers() {
+        LoginActivity.db().collection("offers")
+                .whereEqualTo("sellerUid", user.getUid())
                 .whereEqualTo("response", true)
                 .whereEqualTo("status", true)
                 .get()

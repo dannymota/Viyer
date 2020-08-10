@@ -3,7 +3,7 @@ package com.example.viyer.adapters;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.os.Bundle;
+import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,7 +11,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.app.ActivityOptionsCompat;
+import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.viyer.ChatActivity;
@@ -20,6 +20,7 @@ import com.example.viyer.MainActivity;
 import com.example.viyer.R;
 import com.example.viyer.models.Chatroom;
 import com.example.viyer.models.Product;
+import com.example.viyer.models.User;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseUser;
@@ -79,9 +80,11 @@ public class ChatroomsAdapter extends RecyclerView.Adapter<ChatroomsAdapter.View
         }
 
         public void bind(Chatroom chatroom) {
-            String uidOther = chatroom.getUids().get(0).equals(user.getUid()) ? chatroom.getUids().get(1) : user.getUid();
+            String uidOther = chatroom.getUids().get(0).equals(user.getUid()) ? chatroom.getUids().get(1) : chatroom.getUids().get(0);
             Boolean isBuyer = chatroom.getBuyerUid().equals(user.getUid()) ? true : false;
-            tvName.setText(uidOther);
+
+            setChatName(uidOther);
+
             tvMessage.setText(chatroom.getRecentMessage());
             tvUpdatedAt.setText(MainActivity.getRelativeTimeAgo(String.valueOf(chatroom.getUpdatedAt())));
 
@@ -127,6 +130,27 @@ public class ChatroomsAdapter extends RecyclerView.Adapter<ChatroomsAdapter.View
             });
         }
 
+        private void setChatName(String uid) {
+            DocumentReference userRef = LoginActivity.db().collection("users").document(uid);
+            userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @RequiresApi(api = Build.VERSION_CODES.O)
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if (document.exists()) {
+                            User user = document.toObject(User.class);
+
+                            tvName.setText(user.getFirstName() + " " + user.getLastName());
+                        } else {
+                            Log.d(TAG, "User doesn't exist: ", task.getException());
+                        }
+                    } else {
+                        Log.d(TAG, "Error getting documents: ", task.getException());
+                    }
+                }
+            });
+        }
 
     }
 }
