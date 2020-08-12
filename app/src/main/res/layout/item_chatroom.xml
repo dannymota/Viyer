@@ -26,12 +26,12 @@
         android:text="Would you take $200?"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@+id/ivSeller"
-        app:layout_constraintEnd_toEndOf="@+id/tvName"
+        app:layout_constraintEnd_toEndOf="@+id/tvFullName"
         app:layout_constraintStart_toEndOf="@+id/ivSeller"
-        app:layout_constraintTop_toBottomOf="@+id/tvName" />
+        app:layout_constraintTop_toBottomOf="@+id/tvFullName" />
 
     <TextView
-        android:id="@+id/tvName"
+        android:id="@+id/tvFullName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -52,7 +52,17 @@
         android:layout_marginEnd="8dp"
         android:text="7 minutes ago"
         android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="@+id/tvName"
+        app:layout_constraintBottom_toBottomOf="@+id/tvFullName"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/tvName" />
+        app:layout_constraintTop_toTopOf="@+id/tvFullName" />
+
+    <TextView
+        android:id="@+id/tvLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="Agent Type"
+        app:layout_constraintBottom_toBottomOf="@+id/tvMessage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tvMessage" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,22 +1,33 @@
 package com.example.viyer;
 
+import android.os.Bundle;
+import android.os.Handler;
+import android.text.format.DateUtils;
+import android.util.Log;
+import android.view.MenuItem;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-
-import android.os.Bundle;
-import android.text.format.DateUtils;
-import android.view.MenuItem;
 
 import com.example.viyer.fragments.BrowseFragment;
 import com.example.viyer.fragments.ChatFragment;
 import com.example.viyer.fragments.MeetupFragment;
 import com.example.viyer.fragments.PostFragment;
 import com.example.viyer.fragments.ProfileFragment;
+import com.example.viyer.models.User;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.ar.core.ArCoreApk;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -26,16 +37,27 @@ public class MainActivity extends AppCompatActivity {
     public static final String TAG = "MainActivity";
     private BottomNavigationView bottomNavigationView;
     private FragmentManager fragmentManager;
+    public User user;
+    public FirebaseUser firebaseUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        MobileAds.initialize(this, new OnInitializationCompleteListener() {
+            @Override
+            public void onInitializationComplete(InitializationStatus initializationStatus) {
+            }
+        });
+
+        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        getUser(firebaseUser.getUid());
+
         bottomNavigationView = findViewById(R.id.bottomNavigation);
         fragmentManager = getSupportFragmentManager();
 
-        bottomNavigationView.getOrCreateBadge(R.id.action_chat).setNumber(1);
+//        bottomNavigationView.getOrCreateBadge(R.id.action_chat).setNumber(1);
 
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -83,5 +105,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return relativeDate;
+    }
+
+    private void getUser(String uid) {
+        DocumentReference userRef = LoginActivity.db().collection("users").document(uid);
+        userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        user = document.toObject(User.class);
+                    } else {
+                        Log.d(TAG, "User doesn't exist: ", task.getException());
+                    }
+                } else {
+                    Log.d(TAG, "Error getting documents: ", task.getException());
+                }
+            }
+        });
     }
 }

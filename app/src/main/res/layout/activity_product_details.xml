@@ -29,7 +29,7 @@
         app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
 
     <TextView
-        android:id="@+id/tvPrice"
+        android:id="@+id/tvDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -41,6 +41,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/vpImages"
         android:layout_width="0dp"
@@ -49,6 +50,7 @@
         android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toTopOf="@+id/constraintLayout2"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvLocation">
 
@@ -59,8 +61,8 @@
             app:tabBackground="@drawable/tab_selector"
             app:tabGravity="center"
             app:tabIndicatorHeight="0dp" />
-    </androidx.viewpager.widget.ViewPager>
 
+    </androidx.viewpager.widget.ViewPager>
 
     <LinearLayout
         android:id="@+id/constraintLayout2"
@@ -76,30 +78,36 @@
         app:layout_constraintTop_toBottomOf="@+id/vpImages">
 
         <Button
-            android:id="@+id/btnOffer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:layout_weight="1"
-            android:backgroundTint="#F44336"
-            android:text="Offer"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/btnBuy"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <Button
             android:id="@+id/btnBuy"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
             android:layout_weight="1"
             android:backgroundTint="#4CAF50"
-            android:text="Buy"
+            android:text="Message"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/btnOffer"
             app:layout_constraintTop_toTopOf="parent" />
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/ivLiked"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        app:layout_constraintEnd_toEndOf="@+id/tvDate"
+        app:layout_constraintTop_toBottomOf="@+id/tvDate"
+        app:srcCompat="@drawable/ufi_heart" />
+
+    <ImageView
+        android:id="@+id/ivAR"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_marginEnd="8dp"
+        android:backgroundTint="#DA5050"
+        app:layout_constraintBottom_toBottomOf="@+id/ivLiked"
+        app:layout_constraintEnd_toStartOf="@+id/ivLiked"
+        app:layout_constraintTop_toTopOf="@+id/ivLiked"
+        app:srcCompat="@drawable/ar48dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,6 +6,29 @@
     android:layout_height="match_parent"
     tools:context=".fragments.ProfileFragment">
 
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/tbProfile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/profileToolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize">
+
+            </androidx.appcompat.widget.Toolbar>
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
     <ImageView
         android:id="@+id/ivProfileImage"
         android:layout_width="100dp"
@@ -14,12 +37,12 @@
         android:layout_marginTop="8dp"
         android:scaleType="centerCrop"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tbProfile"
         app:srcCompat="@drawable/ic_launcher_background"
         tools:src="@tools:sample/avatars" />
 
     <TextView
-        android:id="@+id/tvName"
+        android:id="@+id/tvFullName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -37,9 +60,9 @@
         android:text="Verify Now"
         android:textColor="#2196F3"
         android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="@+id/tvName"
-        app:layout_constraintStart_toEndOf="@+id/tvName"
-        app:layout_constraintTop_toTopOf="@+id/tvName" />
+        app:layout_constraintBottom_toBottomOf="@+id/tvFullName"
+        app:layout_constraintStart_toEndOf="@+id/tvFullName"
+        app:layout_constraintTop_toTopOf="@+id/tvFullName" />
 
     <TextView
         android:id="@+id/tvLocation"
@@ -49,24 +72,44 @@
         android:text="New York, NY"
         app:layout_constraintBottom_toTopOf="@+id/rbReviews"
         app:layout_constraintStart_toEndOf="@+id/ivProfileImage"
-        app:layout_constraintTop_toBottomOf="@+id/tvName" />
+        app:layout_constraintTop_toBottomOf="@+id/tvFullName" />
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivProfileImage">
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Selling" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Likes" />
+
+    </com.google.android.material.tabs.TabLayout>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvLikes"
-        android:layout_width="409dp"
+        android:id="@+id/rvView"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ivProfileImage" />
+        app:layout_constraintTop_toBottomOf="@+id/tabLayout" />
 
     <ImageView
         android:id="@+id/ivVerified"
         android:layout_width="25dp"
         android:layout_height="25dp"
         android:layout_marginStart="8dp"
-        android:backgroundTint="#2196F3"
+        android:tint="#2196F3"
         app:layout_constraintBottom_toBottomOf="@+id/tvVerifyNow"
         app:layout_constraintStart_toEndOf="@+id/tvVerifyNow"
         app:layout_constraintTop_toTopOf="@+id/tvVerifyNow"
@@ -104,4 +147,15 @@
         app:layout_constraintBottom_toBottomOf="@+id/tvLocation"
         app:layout_constraintStart_toEndOf="@+id/tvLocation"
         app:layout_constraintTop_toTopOf="@+id/tvLocation" />
+
+    <TextView
+        android:id="@+id/tvReviewsScore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="3.5"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="@+id/rbReviews"
+        app:layout_constraintStart_toEndOf="@+id/rbReviews"
+        app:layout_constraintTop_toTopOf="@+id/rbReviews" />
 </androidx.constraintlayout.widget.ConstraintLayout>

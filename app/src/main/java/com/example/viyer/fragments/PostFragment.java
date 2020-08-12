@@ -19,6 +19,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -27,28 +29,36 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.viyer.LoginActivity;
 import com.example.viyer.R;
 import com.example.viyer.adapters.PreviewsAdapter;
-import com.google.android.gms.tasks.OnCompleteListener;
+import com.example.viyer.rxfirebase.FirestoreProductFileUploader;
+import com.example.viyer.rxfirebase.FirestoreProductFileUploader.FileUploadCompleteEvent;
+import com.example.viyer.rxfirebase.FirestoreProductFileUploader.FileUploadEvent;
+import com.example.viyer.rxfirebase.FirestoreProductFileUploader.FileUploadFailureEvent;
+import com.example.viyer.rxfirebase.FirestoreProductFileUploader.FileUploadProgressEvent;
+import com.example.viyer.rxfirebase.FirestoreProductFileUploader.FileUploadSuccessEvent;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
 import static android.app.Activity.RESULT_OK;
 import static com.example.viyer.MainActivity.TAG;
@@ -76,6 +86,8 @@ public class PostFragment extends Fragment {
     private Button btnSelect, btnTake, btnPost;
     private FirebaseStorage storage;
     private StorageReference storageReference;
+    private FirestoreProductFileUploader fileUploader;
+    private Disposable uploadDisposable;
     private ImageView ivPreview;
     private FirebaseUser user;
     private PreviewsAdapter adapter;
@@ -85,6 +97,8 @@ public class PostFragment extends Fragment {
     private EditText etPrice;
     private ScrollView scrollView;
     private Uri photoUri;
+    private ProgressDialog uploadProgressDialog;
+    private Toolbar mToolbar;
 
     public PostFragment() {}
 
@@ -106,6 +120,8 @@ public class PostFragment extends Fragment {
         }
 
         user = FirebaseAuth.getInstance().getCurrentUser();
+        fileUploader = new FirestoreProductFileUploader();
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -126,6 +142,13 @@ public class PostFragment extends Fragment {
         etTitle = view.findViewById(R.id.etTitle);
         etDesc = view.findViewById(R.id.etDesc);
         etPrice = view.findViewById(R.id.etPrice);
+
+        mToolbar = view.findViewById(R.id.browsePost);
+        ((AppCompatActivity)getActivity()).setSupportActionBar(mToolbar);
+        mToolbar.setTitle("Post");
+
+        uploadProgressDialog = new ProgressDialog(getContext());
+        uploadProgressDialog.setTitle("Uploading...");
 
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
@@ -184,6 +207,46 @@ public class PostFragment extends Fragment {
                 btnPost.setClickable(true);
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        listenToUploadEvents();
+    }
+
+    private void listenToUploadEvents() {
+        uploadDisposable = fileUploader.observeUploadEvents()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<FileUploadEvent>() {
+                    @Override
+                    public void accept(FileUploadEvent event) throws Exception {
+                        if (event instanceof FileUploadProgressEvent) {
+                            handleUploadProgressEvent((FileUploadProgressEvent) event);
+                        } else if (event instanceof FileUploadCompleteEvent) {
+                            handleUploadCompleteEvent();
+                        } else if (event instanceof FileUploadSuccessEvent) {
+                            handleFileUploadSuccessEvent((FileUploadSuccessEvent) event);
+                        } else if (event instanceof FileUploadFailureEvent) {
+                            handleUploadFailureEvent(((FileUploadFailureEvent) event).errorMessage);
+                        }
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        handleUploadFailureEvent(throwable.getMessage());
+                    }
+                });
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (uploadDisposable != null) {
+            uploadDisposable.dispose();
+            uploadDisposable = null;
+        }
     }
 
     public static boolean isEmpty(EditText etText) {
@@ -247,7 +310,7 @@ public class PostFragment extends Fragment {
                 storageDir      /* directory */
         );
 
-        // Save a file: path for use with ACTION_VIEW intents
+
         String currentPhotoPath = image.getAbsolutePath();
         return image;
     }
@@ -275,9 +338,8 @@ public class PostFragment extends Fragment {
 
     private void uploadImage() {
         if (filePaths != null) {
-            final ProgressDialog progressDialog = new ProgressDialog(getContext());
-            progressDialog.setTitle("Uploading...");
-            progressDialog.show();
+
+            uploadProgressDialog.show();
 
             List<String> photoUrls = new ArrayList<>();
 
@@ -286,56 +348,35 @@ public class PostFragment extends Fragment {
             addPostToCollection(postId);
 
             for (Uri uri : filePaths) {
-                final StorageReference ref = storageReference.child("posts/" + postId + "/" + UUID.randomUUID().toString());
-                ref.putFile(uri)
-                        .addOnSuccessListener(
-                                new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                    @Override
-                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                        progressDialog.dismiss();
-
-                                        // TODO: 7/20/20 Add chain pattern to optimize callbacks
-                                        Task<Uri> result = taskSnapshot.getMetadata().getReference().getDownloadUrl();
-                                        result.addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                            @Override
-                                            public void onSuccess(Uri uri) {
-                                                addImageToPost(postId, uri.toString());
-                                            }
-                                        });
-                                    }
-                                })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                // Error, Image not uploaded
-                                progressDialog.dismiss();
-                                Toast.makeText(getContext(),"Failed " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                            }
-                        })
-                        .addOnProgressListener(
-                                new OnProgressListener<UploadTask.TaskSnapshot>() {
-                                    // Progress Listener for loading
-                                    // percentage on the dialog box
-                                    @Override
-                                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                                        double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
-                                        progressDialog.setMessage("Uploaded " + (int)progress + "%");
-                                    }
-                                }).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                                        Toast.makeText(getContext(),"Post sent", Toast.LENGTH_SHORT).show();
-                                        photos.clear();
-                                        adapter.notifyDataSetChanged();
-                                        filePaths.clear();
-                                        ivPreview.setImageResource(R.drawable.ic_launcher_background);
-                                        etTitle.setText("");
-                                        etDesc.setText("");
-                                        etPrice.setText("");
-                                    }
-                                });
+                fileUploader.uploadPostFile(postId, uri);
             }
         }
+    }
+
+    private void handleFileUploadSuccessEvent(FileUploadSuccessEvent event) {
+        uploadProgressDialog.dismiss();
+        addImageToPost(event.postId, event.fileUri.toString());
+    }
+
+    private void handleUploadProgressEvent(FileUploadProgressEvent event) {
+        uploadProgressDialog.setMessage("Uploaded " + event.uploadProgress + "%");
+    }
+
+    private void handleUploadCompleteEvent() {
+        Toast.makeText(getContext(),"Post sent", Toast.LENGTH_SHORT).show();
+        photos.clear();
+        adapter.notifyDataSetChanged();
+        filePaths.clear();
+        ivPreview.setImageResource(R.drawable.ic_launcher_background);
+        etTitle.setText("");
+        etDesc.setText("");
+        etPrice.setText("");
+    }
+
+    private void handleUploadFailureEvent(String errorMessage) {
+        // Error, Image not uploaded
+        uploadProgressDialog.dismiss();
+        Toast.makeText(getContext(),"Failed " + errorMessage, Toast.LENGTH_SHORT).show();
     }
 
     public void addImageToPost(String postUID, String photoUrl) {
@@ -360,7 +401,10 @@ public class PostFragment extends Fragment {
         post.put("photoUrls", new ArrayList<>());
         post.put("title", etTitle.getText().toString());
         post.put("description", etDesc.getText().toString());
-        post.put("price", etPrice.getText().toString());
+        post.put("price", Integer.parseInt(etPrice.getText().toString()));
+        post.put("locked", false);
+        post.put("ar", false);
+        post.put("likes", Arrays.asList());
 
         LoginActivity.db().collection("posts").document(postId)
                 .set(post)

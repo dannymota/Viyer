@@ -8,6 +8,11 @@ import java.util.List;
 public class Chatroom {
     private String productId;
     private String recentMessage;
+    private String buyerUid;
+
+    public String getBuyerUid() {
+        return buyerUid;
+    }
 
     public String getRecentMessage() {
         return recentMessage;

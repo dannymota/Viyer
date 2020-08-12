@@ -1,22 +1,27 @@
 package com.example.viyer.fragments;
 
-import android.content.Intent;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.OrientationHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -24,23 +29,29 @@ import com.example.viyer.LoginActivity;
 import com.example.viyer.R;
 import com.example.viyer.adapters.ProductsAdapter;
 import com.example.viyer.models.Product;
+import com.example.viyer.models.ProductAdsData;
+import com.google.android.flexbox.FlexDirection;
+import com.google.android.flexbox.FlexboxLayoutManager;
+import com.google.android.flexbox.JustifyContent;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdLoader;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.formats.UnifiedNativeAd;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.example.viyer.MainActivity.TAG;
+import static com.example.viyer.adapters.ProductsAdapter.UNIFIED_ADS_VIEW;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -57,15 +68,23 @@ public class BrowseFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-    private Button btnLogout;
     private RecyclerView rvProducts;
     private ProductsAdapter adapter;
     private List<Product> products;
     private FirebaseUser user;
     private TextView tvNoMessage;
     private ImageView ivDog;
-    private TextView tvSort;
+    private TextView tvSortBy;
     private TextView tvDetail;
+    private int checkItem;
+    private ImageView ivSort;
+    private Toolbar mToolbar;
+    public int NUMBER_OF_ADS;
+    private AdLoader adLoader;
+    private List<UnifiedNativeAd> mNativeAds;
+    private List<ProductAdsData> productAds;
+    private Context mContext;
+    private Boolean isDescending;
 
     public BrowseFragment() {
         // Required empty public constructor
@@ -97,6 +116,7 @@ public class BrowseFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
         user = FirebaseAuth.getInstance().getCurrentUser();
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -107,40 +127,137 @@ public class BrowseFragment extends Fragment {
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu,inflater);
+        inflater.inflate(R.menu.browse_fragment, menu);
+        MenuItem menuItem = menu.findItem(R.id.browse_search);
+        SearchView searchView = (SearchView) menuItem.getActionView();
+        searchView.setQueryHint("Search for a product...");
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                adapter.filter(query);
+                refreshAdapter();
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                adapter.filter(newText);
+                refreshAdapter();
+                return true;
+            }
+        });
+    }
+
+    @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        btnLogout = view.findViewById(R.id.btnLogout);
+        checkItem = 0;
+        isDescending = false;
+
+        mToolbar = view.findViewById(R.id.browseToolbar);
+        ((AppCompatActivity)getActivity()).setSupportActionBar(mToolbar);
+        mToolbar.setTitle("Browse");
+
         rvProducts = view.findViewById(R.id.rvProducts);
         tvNoMessage = view.findViewById(R.id.tvNoMessage);
-        tvSort = view.findViewById(R.id.tvSort);
+        tvSortBy = view.findViewById(R.id.tvSortBy);
         tvDetail = view.findViewById(R.id.tvDetail);
         ivDog = view.findViewById(R.id.ivDog);
-        products = new ArrayList<>();
-        adapter = new ProductsAdapter(getContext(), products);
-        rvProducts.setAdapter(adapter);
+        ivSort = view.findViewById(R.id.ivSort);
 
-        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
-        layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
+        mNativeAds = new ArrayList<>();
+        productAds = new ArrayList<>();
+        getProducts();
 
-        rvProducts.setLayoutManager(layoutManager);
-        rvProducts.setItemAnimator(new DefaultItemAnimator());
+        adapter = new ProductsAdapter(getContext(), productAds);
+        refreshAdapter();
 
-        btnLogout.setOnClickListener(new View.OnClickListener() {
+        tvSortBy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                FirebaseAuth.getInstance().signOut();
-                getLoginActivity();
+                changeSorting();
             }
         });
 
-        getProducts();
+        ivSort.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (isDescending) {
+                    isDescending = false;
+                    ivSort.setImageResource(R.drawable.ic_baseline_arrow_drop_down_24);
+                } else {
+                    isDescending = true;
+                    ivSort.setImageResource(R.drawable.ic_baseline_arrow_drop_up_24);
+                }
+                Collections.reverse(productAds);
+                refreshAdapter();
+            }
+        });
     }
 
-    private void getLoginActivity() {
-        Intent i = new Intent(getContext(), LoginActivity.class);
-        startActivity(i);
-        getActivity().onBackPressed();
+    private void insertAdsInMenuItems() {
+        if (mNativeAds.size() <= 0) {
+            return;
+        }
+
+        int offset = (productAds.size() / mNativeAds.size()) + 1;
+        int index = 0;
+        for (UnifiedNativeAd ad: mNativeAds) {
+            ProductAdsData adsData = new ProductAdsData();
+            adsData.product = null;
+            adsData.ads = ad;
+            adsData.type = 1;
+            productAds.add(index, adsData);
+            index = index + offset;
+        }
+
+        adapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        mContext = context;
+        super.onAttach(context);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mContext = null;
+    }
+
+    private void loadNativeAds() {
+        AdLoader.Builder builder = new AdLoader.Builder(mContext, getString(R.string.admob_ad_id));
+        adLoader = builder.forUnifiedNativeAd(
+                new UnifiedNativeAd.OnUnifiedNativeAdLoadedListener() {
+                    @Override
+                    public void onUnifiedNativeAdLoaded(UnifiedNativeAd unifiedNativeAd) {
+                        // A native ad loaded successfully, check if the ad loader has finished loading
+                        // and if so, insert the ads into the list.
+                        mNativeAds.add(unifiedNativeAd);
+                        if (!adLoader.isLoading()) {
+                            insertAdsInMenuItems();
+                        }
+                    }
+                }).withAdListener(
+                new AdListener() {
+                    @Override
+                    public void onAdFailedToLoad(int errorCode) {
+                        // A native ad failed to load, check if the ad loader has finished loading
+                        // and if so, insert the ads into the list.
+                        Log.e(TAG, "The previous native ad failed to load. Attempting to" + " load another.");
+                        if (!adLoader.isLoading()) {
+                            insertAdsInMenuItems();
+                        }
+                    }
+                }).build();
+
+        // Load the Native Express ad.
+        adLoader.loadAds(new AdRequest.Builder().build(), 1);
     }
 
     private void getProducts() {
@@ -152,26 +269,132 @@ public class BrowseFragment extends Fragment {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
 
                         if (task.isSuccessful()) {
+
+                            List<ProductAdsData> resultsList = new ArrayList<>();
                             List<Product> result = task.getResult().toObjects(Product.class);
                             result.removeIf(p -> p.getUid().equals(user.getUid()));
+                            for (Product product : result) {
+                                ProductAdsData data = new ProductAdsData();
+                                data.type = 2;
+                                data.product = product;
+                                data.ads = null;
+                                resultsList.add(data);
+                            }
 
-                            if (result.isEmpty()) {
+                            if (resultsList.isEmpty()) {
                                 tvNoMessage.setVisibility(View.VISIBLE);
                                 ivDog.setVisibility(View.VISIBLE);
+                                rvProducts.setVisibility(View.INVISIBLE);
                             } else {
                                 tvNoMessage.setVisibility(View.INVISIBLE);
                                 ivDog.setVisibility(View.INVISIBLE);
-                                tvDetail.setVisibility(View.VISIBLE);
-                                tvSort.setVisibility(View.VISIBLE);
+//                                tvDetail.setVisibility(View.VISIBLE);
+                                tvSortBy.setVisibility(View.VISIBLE);
+                                ivSort.setVisibility(View.VISIBLE);
+                                rvProducts.setVisibility(View.VISIBLE);
                             }
 
-                            products.addAll(result);
+                            productAds.addAll(resultsList);
+//                            adapter.setProductAdsList(resultsList);
+                            adapter.copyProducts(resultsList);
                             adapter.notifyDataSetChanged();
-                            Log.d(TAG, "Size: " + products.size());
+                            NUMBER_OF_ADS = (int) Math.floor(productAds.size() / 3);
+                            loadNativeAds();
                         } else {
                             Log.d(TAG, "Error getting documents: ", task.getException());
                         }
                     }
                 });
+    }
+
+    private void changeSorting() {
+        final CharSequence[] MAP_TYPE_ITEMS =
+                {"Recent", "Price"};
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(getContext());
+        builder.setTitle("Sort by");
+        builder.setSingleChoiceItems(
+                MAP_TYPE_ITEMS,
+                checkItem,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        switch (item) {
+                            case 0:
+                                tvSortBy.setText("Sort by Recent");
+                                checkItem = 0;
+                                adapter.clear();
+                                mNativeAds.clear();
+                                getProducts();
+                                adapter.notifyDataSetChanged();
+                                ivSort.setImageResource(R.drawable.ic_baseline_arrow_drop_down_24);
+                                refreshAdapter();
+                                break;
+                            case 1:
+                                tvSortBy.setText("Sort by Price");
+                                mNativeAds.clear();
+                                checkItem = 1;
+
+                                for(Iterator<ProductAdsData> i = productAds.iterator(); i.hasNext();) {
+                                    ProductAdsData name = i.next();
+                                    if (name.getProduct() == null) {
+                                        i.remove();
+                                    }
+                                }
+                                mergeSort(productAds);
+                                loadNativeAds();
+                                adapter.notifyDataSetChanged();
+                                ivSort.setImageResource(R.drawable.ic_baseline_arrow_drop_down_24);
+                                refreshAdapter();
+                                break;
+                        }
+                        dialog.dismiss();
+                    }
+                }
+        );
+        builder.show();
+    }
+
+    private static List<ProductAdsData> merge(final List<ProductAdsData> left, final List<ProductAdsData> right) {
+        final List<ProductAdsData> merged = new ArrayList<>();
+        while (!left.isEmpty() && !right.isEmpty()) {
+            if(left.get(0).getProduct().getPrice() - right.get(0).getProduct().getPrice() <= 0) {
+                merged.add(left.remove(0));
+            } else {
+                merged.add(right.remove(0));
+            }
+        }
+        merged.addAll(left);
+        merged.addAll(right);
+        return merged;
+    }
+
+    public static void mergeSort(final List<ProductAdsData> products) {
+        boolean addSwitch = true;
+        if (products.size() >= 2) {
+            final List<ProductAdsData> left = new ArrayList<>();
+            final List<ProductAdsData> right = new ArrayList<>();
+
+            while (!products.isEmpty()) {
+                if (addSwitch) {
+                    left.add(products.remove(0));
+                } else {
+                    right.add(products.remove(products.size() / 2));
+                }
+                addSwitch = !addSwitch;
+            }
+            mergeSort(left);
+            mergeSort(right);
+            products.addAll(merge(left, right));
+        }
+    }
+
+    public void refreshAdapter() {
+        rvProducts.setAdapter(adapter);
+
+        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+        layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
+
+        rvProducts.setLayoutManager(layoutManager);
+        rvProducts.setItemAnimator(new DefaultItemAnimator());
     }
 }
