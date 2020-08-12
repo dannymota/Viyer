@@ -119,6 +119,10 @@ public class ProductDetailsActivity extends AppCompatActivity {
 
         });
 
+        if (!product.getAr()) {
+            ivAR.setVisibility(View.GONE);
+        }
+
         ivLiked.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -145,6 +149,7 @@ public class ProductDetailsActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(ProductDetailsActivity.this, AugmentedProductActivity.class);
+                intent.putExtra(Product.class.getSimpleName(), Parcels.wrap(product));
                 startActivity(intent);
             }
         });

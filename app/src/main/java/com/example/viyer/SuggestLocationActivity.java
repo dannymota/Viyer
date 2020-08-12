@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.example.viyer.models.Product;
 import com.google.android.gms.common.api.Status;
@@ -82,11 +83,16 @@ public class SuggestLocationActivity extends AppCompatActivity {
     private TextInputEditText etOfferSelect;
     private Date date;
     private String address;
+    private Toolbar mToolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_suggest_location);
+
+        mToolbar = findViewById(R.id.suggestToolbar);
+        this.setSupportActionBar(mToolbar);
+//        mToolbar.setTitle("Suggest Meetup Location");
 
         ivSuggest = findViewById(R.id.ivSuggest);
         tvPlace = findViewById(R.id.tvPlace);

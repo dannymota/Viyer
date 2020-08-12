@@ -27,6 +27,8 @@ import android.widget.TextView;
 
 import com.example.viyer.LoginActivity;
 import com.example.viyer.R;
+import com.example.viyer.SignUpActivity;
+import com.example.viyer.VerifyIdentityActivity;
 import com.example.viyer.adapters.ProductsAdapter;
 import com.example.viyer.layouts.SquareRelativeLayout;
 import com.example.viyer.models.Product;
@@ -192,6 +194,14 @@ public class ProfileFragment extends Fragment {
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) { }
+        });
+
+        tvVerifyNow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                    Intent i = new Intent(getContext(), VerifyIdentityActivity.class);
+                    startActivity(i);
+            }
         });
     }
 

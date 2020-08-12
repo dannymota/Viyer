@@ -151,4 +151,13 @@ public class MeetupFragment extends Fragment {
                     }
                 });
     }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        Fragment fragment = getActivity().getSupportFragmentManager().findFragmentById(R.id.map);
+        if (fragment != null) {
+            getFragmentManager().beginTransaction().remove(fragment).commit();
+        }
+    }
 }

@@ -14,7 +14,13 @@ public class Product {
     private String uid;
     private Boolean locked;
     private List<String> likes;
-//    private UnifiedNativeAd ads;
+    private Boolean ar;
+
+    public Boolean getAr() {
+        return ar;
+    }
+
+    //    private UnifiedNativeAd ads;
     private int type;
 
 //    public UnifiedNativeAd getAds() {

@@ -36,7 +36,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-<!--        <activity android:name=".PhoneAuthActivity"></activity>-->
+        <activity android:name=".VerifyIdentityActivity"></activity>
+        <!-- <activity android:name=".PhoneAuthActivity"></activity> -->
         <activity android:name=".AugmentedProductActivity" />
         <activity android:name=".SignUpActivity" />
         <activity android:name=".SuggestLocationActivity" />
@@ -72,6 +73,9 @@
         <meta-data
             android:name="com.google.ar.core"
             android:value="required" />
+        <meta-data
+            android:name="com.google.android.gms.vision.DEPENDENCIES"
+            android:value="face" />
     </application>
 
 </manifest>

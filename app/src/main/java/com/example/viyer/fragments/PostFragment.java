@@ -403,6 +403,7 @@ public class PostFragment extends Fragment {
         post.put("description", etDesc.getText().toString());
         post.put("price", Integer.parseInt(etPrice.getText().toString()));
         post.put("locked", false);
+        post.put("ar", false);
         post.put("likes", Arrays.asList());
 
         LoginActivity.db().collection("posts").document(postId)

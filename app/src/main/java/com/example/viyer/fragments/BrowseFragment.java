@@ -257,7 +257,7 @@ public class BrowseFragment extends Fragment {
                 }).build();
 
         // Load the Native Express ad.
-        adLoader.loadAds(new AdRequest.Builder().build(), NUMBER_OF_ADS);
+        adLoader.loadAds(new AdRequest.Builder().build(), 1);
     }
 
     private void getProducts() {
@@ -288,7 +288,7 @@ public class BrowseFragment extends Fragment {
                             } else {
                                 tvNoMessage.setVisibility(View.INVISIBLE);
                                 ivDog.setVisibility(View.INVISIBLE);
-                                tvDetail.setVisibility(View.VISIBLE);
+//                                tvDetail.setVisibility(View.VISIBLE);
                                 tvSortBy.setVisibility(View.VISIBLE);
                                 ivSort.setVisibility(View.VISIBLE);
                                 rvProducts.setVisibility(View.VISIBLE);
@@ -309,7 +309,7 @@ public class BrowseFragment extends Fragment {
 
     private void changeSorting() {
         final CharSequence[] MAP_TYPE_ITEMS =
-                {"Recent", "Price", "Location"};
+                {"Recent", "Price"};
 
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(getContext());
         builder.setTitle("Sort by");
@@ -345,10 +345,6 @@ public class BrowseFragment extends Fragment {
                                 adapter.notifyDataSetChanged();
                                 ivSort.setImageResource(R.drawable.ic_baseline_arrow_drop_down_24);
                                 refreshAdapter();
-                                break;
-                            case 2:
-                                tvSortBy.setText("Sort by Location");
-                                checkItem = 2;
                                 break;
                         }
                         dialog.dismiss();
